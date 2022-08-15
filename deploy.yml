@@ -1,0 +1,7 @@
+---
+- name: Deploy vCenter Server
+  hosts: localhost
+  gather_facts: false
+
+  roles:
+    - role: vsphere/vsphere-nested-hosts
