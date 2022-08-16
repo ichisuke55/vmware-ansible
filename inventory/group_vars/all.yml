@@ -1,0 +1,13 @@
+build:
+  temp_folder: "/tmp"
+  mount_point: "/media/ichisuke/"
+  iso_file: "VMware-VMvisor-Installer-7.0U3f-20036589.x86_64.iso"
+  iso_directory: "/home/ichisuke/Downloads"
+  # esxi_installer: "VMware-VMvisor-Installer-7.0U3f-20036589"
+
+nested_esxi:
+  host:
+    esxi11:
+      vm_name: "esxi11"
+    esxi12:
+      vm_name: "esxi12"
