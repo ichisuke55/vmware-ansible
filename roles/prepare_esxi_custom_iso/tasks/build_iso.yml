@@ -1,0 +1,14 @@
+---
+- name: Copy KS.CFG each ESXi host installer
+  ansible.builtin.copy:
+    src: "{{ build.temp_folder }}/{{ item.value.vm_name }}/KS.CFG"
+    dest: "{{ build.temp_folder }}/{{ build.esxi_installer }}"
+    mode: "666"
+
+- name: Create custom ESXi iso for each nested ESXi host
+  ansible.builtin.command: "genisoimage -relaxed-filenames -J -R -o {{ build.temp_folder }}/{{ item.value.vm_name }}-kickstart.iso \
+                            -b isolinux.bin -c boot.cat -no-emul-boot -boot-load-size 4 -boot-info-table -eltorito-alt-boot \
+                            -e efiboot.img -no-emul-boot {{ build.temp_folder }}/{{ build.esxi_installer }}"
+  args:
+    chdir: "{{ build.temp_folder }}/{{ item.value.vm_name }}"
+  changed_when: false

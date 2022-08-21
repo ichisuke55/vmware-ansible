@@ -7,8 +7,18 @@
 3. execute below command
 ```
 poetry install
-poetry run absible-galaxy install -r requirements.yml
+poetry run absible-galaxy collection install -r requirements.yml
 ```
 
 ## execution
 WIP
+
+## lint
+- ansible-lint
+```
+poetry run ansible-lint .
+```
+- yamllint
+```
+poetry run yamllint .
+```

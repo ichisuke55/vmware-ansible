@@ -1,0 +1,54 @@
+---
+# tasks file for prepare-custom-esxi-iso
+- name: Create temp dir
+  ansible.builtin.file:
+    path: "{{ build.temp_folder }}"
+    state: directory
+    mode: "755"
+
+- name: Mount ESXi iso
+  ansible.posix.mount:
+    path: "{{ build.mount_point }}"
+    src: "{{ build.iso_directory }}/{{ build.iso_file }}"
+    fstype: iso9660
+    opts: ro
+    boot: false
+    state: mounted
+  become: true
+
+- name: Copy all mounted file from ESXi iso
+  ansible.builtin.copy:
+    src: "{{ build.mount_point }}/"
+    dest: "{{ build.temp_folder }}/{{ build.esxi_installer }}/"
+    mode: "666"
+
+- name: Edit boot.cfg
+  ansible.builtin.replace:
+    dest: "{{ build.temp_folder }}/{{ build.esxi_installer }}/boot.cfg"
+    regexp: 'kernelopt=.*'
+    replace: 'kernelopt=ks=cdrom:/KS.CFG'
+    mode: "644"
+
+- name: Create directory for each nested ESXi host
+  ansible.builtin.file:
+    path: "{{ build.temp_folder }}/{{ item.value.vm_name }}"
+    state: directory
+    mode: "755"
+  loop: "{{ nested_esxi.host | dict2items }}"
+
+- name: Create kickstart file for each nested ESXi host
+  ansible.builtin.template:
+    src: "{{ build.template_file }}"
+    dest: "{{ build.temp_folder }}/{{ item.value.vm_name }}/KS.CFG"
+    mode: "666"
+  loop: "{{ nested_esxi.host | dict2items }}"
+
+- include_tasks: build_iso.yml
+  with_items:
+    - "{{ nested_esxi.host | dict2items }}"
+
+- name: Unmount ESXi installer
+  ansible.posix.mount:
+    path: "{{ build.mount_point }}"
+    state: absent
+  become: true

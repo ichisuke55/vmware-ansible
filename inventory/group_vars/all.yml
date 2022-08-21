@@ -1,13 +1,64 @@
+---
 build:
-  temp_folder: "/tmp"
-  mount_point: "/media/ichisuke/"
+  temp_folder: "/tmp/isos"
+  mount_point: "/mnt/isos"
   iso_file: "VMware-VMvisor-Installer-7.0U3f-20036589.x86_64.iso"
   iso_directory: "/home/ichisuke/Downloads"
-  # esxi_installer: "VMware-VMvisor-Installer-7.0U3f-20036589"
+  esxi_installer: "ESXi-Installer-7.0U3f-20036589"
+  template_file: "esxi_v7.x_kickstart.j2"
 
 nested_esxi:
   host:
     esxi11:
+      cluster: nested_a
       vm_name: "esxi11"
+      fqdn: "esxi11.ichisuke.home"
+      vmk:
+        vmk0:
+          vlan: "0"
+          address:
+            ipv4:
+              address: "192.168.3.221"
+              prefix: "24"
+              gateway: "192.168.3.1"
+      enable_ssh: true
+
     esxi12:
+      cluster: nested_a
       vm_name: "esxi12"
+      fqdn: "esxi12.ichisuke.home"
+      vmk:
+        vmk0:
+          vlan: "0"
+          address:
+            ipv4:
+              address: "192.168.3.222"
+              prefix: "24"
+              gateway: "192.168.3.1"
+      enable_ssh: true
+
+  hardware_properties:
+    nested_a:
+      cpu: 4
+      memory: 16000
+      vsan:
+        cache_size: 20
+        capacity_size: 100
+
+common:
+  esxi:
+    password: "VMware1!"
+  dns:
+    primary:
+      ipv4: "192.168.3.214"
+    secondary:
+      ipv4: "192.168.3.215"
+  ntp:
+    primary:
+      ipv4: "192.168.3.214"
+    secondary:
+      ipv4: "192.168.3.215"
+  syslog:
+    ipv4: "192.168.3.195"
+    protocol: "udp"
+    port: "514"

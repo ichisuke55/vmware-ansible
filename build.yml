@@ -4,4 +4,4 @@
   gather_facts: false
 
   roles:
-    - prepare-esxi-custom-iso
+    - prepare_esxi_custom_iso
