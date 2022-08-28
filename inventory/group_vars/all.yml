@@ -3,7 +3,7 @@ build:
   temp_folder: "/tmp/isos"
   mount_point: "/mnt/isos"
   iso_file: "VMware-VMvisor-Installer-7.0U3f-20036589.x86_64.iso"
-  iso_directory: "/home/ichisuke/Downloads"
+  iso_directory: "/home/ichisuke/vmware/iso"
   esxi_installer: "ESXi-Installer-7.0U3f-20036589"
   template_file: "esxi_v7.x_kickstart.j2"
 
@@ -37,6 +37,20 @@ nested_esxi:
               gateway: "192.168.3.1"
       enable_ssh: true
 
+    esxi13:
+      cluster: nested_a
+      vm_name: "esxi13"
+      fqdn: "esxi13.ichisuke.home"
+      vmk:
+        vmk0:
+          vlan: "0"
+          address:
+            ipv4:
+              address: "192.168.3.223"
+              prefix: "24"
+              gateway: "192.168.3.1"
+      enable_ssh: true
+
   hardware_properties:
     nested_a:
       cpu: 4
@@ -46,6 +60,14 @@ nested_esxi:
         capacity_size: 100
 
 common:
+  vsphere:
+    fqdn: "vcenter01.ichisuke.home"
+    user: "administrator@ichisuke.home"
+    password: "VMware1!"
+    validate_certs: false
+    datacenter: "HomeLabDC"
+    datastore: "datastore.esxi02.sata"
+    datastore_path: "ISOs"
   esxi:
     password: "VMware1!"
   dns:

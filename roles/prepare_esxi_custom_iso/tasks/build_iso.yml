@@ -1,4 +1,5 @@
 ---
+# ref: https://docs.vmware.com/en/VMware-vSphere/7.0/com.vmware.esxi.install.doc/GUID-C03EADEA-A192-4AB4-9B71-9256A9CB1F9C.html
 - name: Copy KS.CFG each ESXi host installer
   ansible.builtin.copy:
     src: "{{ build.temp_folder }}/{{ item.value.vm_name }}/KS.CFG"

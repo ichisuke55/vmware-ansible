@@ -1,5 +1,6 @@
 ---
 # tasks file for prepare-custom-esxi-iso
+# ref: https://docs.vmware.com/en/VMware-vSphere/7.0/com.vmware.esxi.install.doc/GUID-C03EADEA-A192-4AB4-9B71-9256A9CB1F9C.html
 - name: Create temp dir
   ansible.builtin.file:
     path: "{{ build.temp_folder }}"
@@ -24,9 +25,9 @@
 
 - name: Edit boot.cfg
   ansible.builtin.replace:
-    dest: "{{ build.temp_folder }}/{{ build.esxi_installer }}/boot.cfg"
+    dest: "{{ build.temp_folder }}/{{ build.esxi_installer }}/efi/boot/boot.cfg"
     regexp: 'kernelopt=.*'
-    replace: 'kernelopt=ks=cdrom:/KS.CFG'
+    replace: 'kernelopt=runweasel ks=cdrom:/KS.CFG'
     mode: "644"
 
 - name: Create directory for each nested ESXi host
@@ -52,3 +53,15 @@
     path: "{{ build.mount_point }}"
     state: absent
   become: true
+
+- name: Upload ESXi isos to the datastore
+  community.vmware.vsphere_copy:
+    hostname: "{{ common.vsphere.fqdn }}"
+    username: "{{ common.vsphere.user }}"
+    password: "{{ common.vsphere.password }}"
+    validate_certs: "{{ common.vsphere.validate_certs }}"
+    datacenter: "{{ common.vsphere.datacenter }}"
+    src: "{{ build.temp_folder }}/{{ item.value.vm_name }}-kickstart.iso"
+    datastore: "{{ common.vsphere.datastore }}"
+    path: "{{ common.vsphere.datastore_path }}/{{ item.value.vm_name }}-kickstart.iso"
+  loop: "{{ nested_esxi.host | dict2items }}"
