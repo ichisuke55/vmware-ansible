@@ -1,0 +1,49 @@
+---
+# tasks file for deploy_nested_esxi
+- name: Deploy nested ESXi hosts
+  community.vmware.vmware_guest:
+    hostname: "{{ common.vsphere.fqdn }}"
+    username: "{{ common.vsphere.user }}"
+    password: "{{ common.vsphere.password }}"
+    validate_certs: "{{ nested_esxi.common.validate_certs }}"
+    name: "{{ item.value.vm_name }}"
+    state: "powered-off"
+    guest_id: "{{ item.value.guest_id }}"
+    cluster: "{{ item.value.cluster }}"
+    datacenter: "{{ common.vsphere.datacenter }}"
+    folder: "{{ nested_esxi.common.folder }}"
+    disk:
+      - size_gb: "{{ nested_esxi.hardware_properties[item.value.cluster]['boot_size'] }}"
+        type: "{{ nested_esxi.common.disk_provisioning }}"
+        datastore: "{{ nested_esxi.common.datastore }}"
+      - size_gb: "{{ nested_esxi.hardware_properties[item.value.cluster]['vsan']['cache_size'] }}"
+        type: "{{ nested_esxi.common.disk_provisioning }}"
+        datastore: "{{ nested_esxi.common.datastore }}"
+      - size_gb: "{{ nested_esxi.hardware_properties[item.value.cluster]['vsan']['capacity_size'] }}"
+        type: "{{ nested_esxi.common.disk_provisioning }}"
+        datastore: "{{ nested_esxi.common.datastore }}"
+    hardware:
+      nested_virt: true
+      scsi: "paravirtual"
+      memory_mb: "{{ nested_esxi.hardware_properties[item.value.cluster]['memory'] }}"
+      num_cpus: "{{ nested_esxi.hardware_properties[item.value.cluster]['cpu'] }}"
+    networks:
+      - name: "{{ nested_esxi.network.port_group[0].name }}"
+        device_type: "{{ nested_esxi.network.port_group[0].type }}"
+        connected: true
+      - name: "{{ nested_esxi.network.port_group[0].name }}"
+        device_type: "{{ nested_esxi.network.port_group[0].type }}"
+        connected: true
+      - name: "{{ nested_esxi.network.port_group[1].name }}"
+        device_type: "{{ nested_esxi.network.port_group[1].type }}"
+        connected: true
+      - name: "{{ nested_esxi.network.port_group[1].name }}"
+        device_type: "{{ nested_esxi.network.port_group[1].type }}"
+        connected: true
+    cdrom:
+      - controller_number: 0
+        unit_number: 0
+        type: "iso"
+        state: "present"
+        iso_path: "[{{ nested_esxi.common.datastore }}] {{ common.vsphere.datastore_path }}/{{ item.value.vm_name }}-kickstart.iso"
+  loop: "{{ nested_esxi.host | dict2items }}"

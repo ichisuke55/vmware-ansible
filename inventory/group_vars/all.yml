@@ -2,17 +2,18 @@
 build:
   temp_folder: "/tmp/isos"
   mount_point: "/mnt/isos"
-  iso_file: "VMware-VMvisor-Installer-7.0U3f-20036589.x86_64.iso"
+  iso_file: "VMware-VMvisor-Installer-6.7.0.update03-14320388.x86_64.iso"
   iso_directory: "/home/ichisuke/vmware/iso"
-  esxi_installer: "ESXi-Installer-7.0U3f-20036589"
-  template_file: "esxi_v7.x_kickstart.j2"
+  esxi_installer: "ESXi-Installer-6.7.0-update3"
+  template_file: "esxi_v6.x_kickstart.j2"
 
 nested_esxi:
   host:
     esxi11:
-      cluster: nested_a
+      cluster: "nested_cluster_a"
       vm_name: "esxi11"
       fqdn: "esxi11.ichisuke.home"
+      guest_id: "vmkernel7Guest" # Enum: GuestOsIdentifier ref: https://developer.vmware.com/apis/1311/vsphere
       vmk:
         vmk0:
           vlan: "0"
@@ -24,9 +25,10 @@ nested_esxi:
       enable_ssh: true
 
     esxi12:
-      cluster: nested_a
+      cluster: "nested_cluster_a"
       vm_name: "esxi12"
       fqdn: "esxi12.ichisuke.home"
+      guest_id: "vmkernel7Guest" # Enum: GuestOsIdentifier ref: https://developer.vmware.com/apis/1311/vsphere
       vmk:
         vmk0:
           vlan: "0"
@@ -38,9 +40,10 @@ nested_esxi:
       enable_ssh: true
 
     esxi13:
-      cluster: nested_a
+      cluster: "nested_cluster_a"
       vm_name: "esxi13"
       fqdn: "esxi13.ichisuke.home"
+      guest_id: "vmkernel7Guest" # Enum: GuestOsIdentifier ref: https://developer.vmware.com/apis/1311/vsphere
       vmk:
         vmk0:
           vlan: "0"
@@ -52,12 +55,28 @@ nested_esxi:
       enable_ssh: true
 
   hardware_properties:
-    nested_a:
+    nested_cluster_a:
       cpu: 4
       memory: 16000
+      boot_size: 32
       vsan:
         cache_size: 20
         capacity_size: 100
+
+  common:
+    username: "root"
+    password: "VMware1!"
+    validate_certs: false
+    disk_provisioning: "thin"
+    datastore: "datastore.nas01"
+    folder: "nested_vms"
+
+  network:
+    port_group:
+      - name: "nested_mgmt"
+        type: "vmxnet3"
+      - name: "nested_storage"
+        type: "vmxnet3"
 
 common:
   vsphere:
@@ -66,7 +85,7 @@ common:
     password: "VMware1!"
     validate_certs: false
     datacenter: "HomeLabDC"
-    datastore: "datastore.esxi02.sata"
+    datastore: "datastore.nas01"
     datastore_path: "ISOs"
   esxi:
     password: "VMware1!"

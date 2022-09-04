@@ -4,4 +4,4 @@
   gather_facts: false
 
   roles:
-    - prepare-esxi-custom-iso
+    - vsphere/deploy_nested_esxi
