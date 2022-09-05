@@ -7,7 +7,7 @@
     password: "{{ common.vsphere.password }}"
     validate_certs: "{{ nested_esxi.common.validate_certs }}"
     name: "{{ item.value.vm_name }}"
-    state: "powered-off"
+    state: "present"
     guest_id: "{{ item.value.guest_id }}"
     cluster: "{{ item.value.cluster }}"
     datacenter: "{{ common.vsphere.datacenter }}"
@@ -24,7 +24,7 @@
         datastore: "{{ nested_esxi.common.datastore }}"
     hardware:
       nested_virt: true
-      scsi: "paravirtual"
+      num_cpu_cores_per_socket: 1
       memory_mb: "{{ nested_esxi.hardware_properties[item.value.cluster]['memory'] }}"
       num_cpus: "{{ nested_esxi.hardware_properties[item.value.cluster]['cpu'] }}"
     networks:
