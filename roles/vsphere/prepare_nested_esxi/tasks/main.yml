@@ -1,0 +1,19 @@
+---
+# tasks file for roles/vsphere/prepare_nested_esxi
+- name: Create port group for nested env
+  community.vmware.vmware_dvs_portgroup:
+    hostname: "{{ common.vsphere.fqdn }}"
+    username: "{{ common.vsphere.user }}"
+    password: "{{ common.vsphere.password }}"
+    validate_certs: "{{ common.vsphere.validate_certs }}"
+    portgroup_name: "{{ item.name }}"
+    switch_name: "{{ common.vsphere.dvs.name }}"
+    port_binding: "ephemeral"
+    vlan_id: "{{ item.vlan_id }}"
+    vlan_trunk: true
+    network_policy:
+      forged_transmits: true
+      promiscuous: true
+    num_ports: "{{ item.num_ports }}"
+    state: "{{ item.state }}"
+  loop: "{{ common.vsphere.port_group.nested }}"

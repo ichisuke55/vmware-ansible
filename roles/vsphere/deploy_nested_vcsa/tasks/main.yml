@@ -1,0 +1,49 @@
+---
+# tasks file for roles/vsphere/deploy_nested_vcsa
+# this tasks is not completed
+- name: Deploy VCSA for nested env
+  community.vmware.vmware_deploy_ovf:
+    hostname: "{{ common.vsphere.fqdn }}"
+    username: "{{ common.vsphere.user }}"
+    password: "{{ common.vsphere.password }}"
+    validate_certs: "{{ common.vsphere.validate_certs }}"
+    name: "{{ nested_vcsa.name }}"
+    datacenter: "{{ common.vsphere.datacenter }}"
+    datastore: "{{ nested_vcsa.datastore }}"
+    disk_provisioning: "{{ nested_vcsa.disk_provi}}"
+    deployment_option: "{{ nested_vcsa.deploy_size }}"
+    networks:
+      "Network 1": "{{ common.vsphere.port_group.nested[0].name }}"
+    ovf: "{{ build.ovf_directory }}/{{ build.vcsa_ova }}"
+    wait_for_ip_address: true
+    inject_ovf_env: true
+    properties:
+      guestinfo.cis.appliance.net.addr.family: "ipv4"
+      guestinfo.cis.appliance.net.mode: "static"  # static or dhcp
+      guestinfo.cis.appliance.net.addr: "{{ nested_vcsa.address.ipv4 }}"
+      guestinfo.cis.appliance.net.pnid: "{{ nested_vcsa.fqdn }}"
+      guestinfo.cis.appliance.net.prefix: "{{ nested_vcsa.address.prefix }}"
+      guestinfo.cis.appliance.net.gateway: "{{ nested_vcsa.address.gateway }}"
+      guestinfo.cis.appliance.net.dns.servers: "{{ common.dns.primary.ipv4 }},{{ common.dns.secondary.ipv4 }}"
+      guestinfo.cis.appliance.root.passwd: "{{ common.vsphere.password }}"
+      # TODO: fix properties
+      guestinfo.cis.appliance.ssh.enabled: true
+      guestinfo.cis.appliance.ntp.servers: "{{ common.ntp.primary.ipv4 }},{{common.ntp.secondary.ipv4}}"
+      guestinfo.cis.ceip_enabled: true
+      guestinfo.cis.deployment.autoconfig: "True"
+      guestinfo.cis.vmdir.domain-name: "{{ common.vsphere.user.split('@')[1] }}"
+      # TODO: fix properties
+      guestinfo.cis.vmdir.password: "{{ common.vsphere.password }}"
+      domain: "{{ common.vsphere.user.split('@')[-1] }}"
+      searchpath: "{{ common.vsphere.user.split('@')[-1] }}"
+
+- name: Check deployed vcsa
+  community.vmware.vmware_about_info:
+    hostname: "{{ nested_vcsa.fqdn }}"
+    username: "{{ common.vsphere.user }}"
+    password: "{{ common.vsphere.password }}"
+    validate_certs: "{{ common.vsphere.validate_certs }}"
+  retries: 60
+  delay: 30
+  register: result
+  until: result is succeeded

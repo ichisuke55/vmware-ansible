@@ -1,0 +1,35 @@
+---
+# tasks file for roles/vsphere/enable_iscsi
+- name: Enable iSCSI of nested esxi
+  community.vmware.vmware_host_iscsi:
+    hostname: "{{ nested_vcsa.fqdn }}"
+    username: "{{ common.vsphere.user }}"
+    password: "{{ common.vsphere.password }}"
+    validate_certs: "{{ common.vsphere.validate_certs }}"
+    esxi_hostname: "{{ item.value.fqdn }}"
+    state: "enabled"
+  loop: "{{ nested_esxi.host | dict2items }}"
+
+- name: Add dynamic target to iSCSI config of nested esxi
+  community.vmware.vmware_host_iscsi:
+    hostname: "{{ nested_vcsa.fqdn }}"
+    username: "{{ common.vsphere.user }}"
+    password: "{{ common.vsphere.password }}"
+    validate_certs: "{{ common.vsphere.validate_certs }}"
+    esxi_hostname: "{{ item.value.fqdn }}"
+    iscsi_config:
+      vmhba_name: "{{ nested_esxi.common.iscsi.vmhba_name }}"
+      send_target:
+        address: "{{ nested_esxi.common.iscsi.target_address }}"
+    state: "present"
+  loop: "{{ nested_esxi.host | dict2items }}"
+
+- name: Rescan HBA
+  community.vmware.vmware_host_scanhba:
+    hostname: "{{ nested_vcsa.fqdn }}"
+    username: "{{ common.vsphere.user }}"
+    password: "{{ common.vsphere.password }}"
+    validate_certs: "{{ common.vsphere.validate_certs }}"
+    esxi_hostname: "{{ item.value.fqdn }}"
+    rescan_hba: true
+  loop: "{{ nested_esxi.host | dict2items }}"

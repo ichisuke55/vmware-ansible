@@ -4,4 +4,12 @@
   gather_facts: false
 
   roles:
+    - vsphere/prepare_nested_esxi
     - vsphere/deploy_nested_esxi
+    # - vsphere/deploy_nested_vcsa # TODO: fix future
+    - vsphere/deploy_nested_vcsa_iso
+    - vsphere/nested_cluster
+    - vsphere/add_host_cluster
+    - vsphere/add_nested_dvs
+    - vsphere/enable_iscsi
+    - vsphere/enable_ntp

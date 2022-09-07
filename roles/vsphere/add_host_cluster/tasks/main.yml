@@ -1,0 +1,15 @@
+---
+# tasks file for roles/vsphere/add_host_cluster
+- name: Add nested esxi hosts to vCenter
+  community.vmware.vmware_host:
+    hostname: "{{ nested_vcsa.fqdn }}"
+    username: "{{ common.vsphere.user }}"
+    password: "{{ common.vsphere.password }}"
+    validate_certs: "{{ common.vsphere.validate_certs }}"
+    datacenter: "{{ nested_vcsa.datacenter }}"
+    cluster: "{{ nested_vcsa.cluster }}"
+    esxi_hostname: "{{ item.value.fqdn }}"
+    esxi_username: "{{ nested_esxi.common.username }}"
+    esxi_password: "{{ nested_esxi.common.password }}"
+    state: "present"
+  loop: "{{ nested_esxi.host | dict2items }}"

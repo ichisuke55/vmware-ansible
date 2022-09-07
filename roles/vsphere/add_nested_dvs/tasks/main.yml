@@ -1,0 +1,30 @@
+---
+# tasks file for roles/vsphere/add_nested_dvs
+- name: Create storage dvs for nested esxi hosts
+  community.vmware.vmware_dvswitch:
+    hostname: "{{ nested_vcsa.fqdn }}"
+    username: "{{ common.vsphere.user }}"
+    password: "{{ common.vsphere.password }}"
+    validate_certs: "{{ common.vsphere.validate_certs }}"
+    datacenter_name: "{{ nested_vcsa.datacenter }}"
+    switch_name: "{{ nested_esxi.network.dvs.storage.name }}"
+    switch_version: "{{ nested_esxi.network.dvs.storage.version }}"
+    mtu: "{{ nested_esxi.network.dvs.storage.mtu }}"
+    uplink_quantity: "{{ nested_esxi.network.dvs.storage.num_uplinks }}"
+    discovery_operation: "{{ nested_esxi.network.dvs.storage.discovery_operation }}"
+    discovery_protocol: "{{ nested_esxi.network.dvs.storage.discovery_protocol }}"
+    state: "present"
+
+- name: Create port group at storage dvs
+  community.vmware.vmware_dvs_portgroup:
+    hostname: "{{ nested_vcsa.fqdn }}"
+    username: "{{ common.vsphere.user }}"
+    password: "{{ common.vsphere.password }}"
+    validate_certs: "{{ common.vsphere.validate_certs }}"
+    portgroup_name: "{{ nested_esxi.network.dvs.storage.port_group.name }}"
+    switch_name: "{{ nested_esxi.network.dvs.storage.name }}"
+    port_binding: "static" # fixed
+    vlan_id: "{{ nested_esxi.network.dvs.storage.port_group.vlan_id }}"
+    vlan_trunk: true
+    num_ports: "{{ nested_esxi.network.dvs.storage.port_group.num_ports }}"
+    state: "{{ nested_esxi.network.dvs.storage.port_group.state }}"
