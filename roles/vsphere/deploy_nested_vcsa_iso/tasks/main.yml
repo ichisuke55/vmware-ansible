@@ -3,8 +3,6 @@
 - name: Check if VCSA deployed
   ansible.builtin.uri:
     url: "https://{{ nested_vcsa.fqdn }}/ui"
-    method: GET
-    status_code: 200
     timeout: 3
     validate_certs: "{{ common.vsphere.validate_certs }}"
     return_content: true
@@ -55,8 +53,6 @@
   - name: Check VCSA management ui
     ansible.builtin.uri:
       url: "https://{{ nested_vcsa.fqdn }}/ui"
-      method: GET
-      status_code: 200
       timeout: 3
       validate_certs: "{{ common.vsphere.validate_certs }}"
       return_content: true

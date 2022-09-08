@@ -13,3 +13,4 @@
     - vsphere/add_nested_dvs
     - vsphere/enable_iscsi
     - vsphere/enable_ntp
+    - vsphere/enable_license

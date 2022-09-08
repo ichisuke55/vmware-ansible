@@ -1,0 +1,21 @@
+---
+# tasks file for roles/vsphere/enable_license
+- name: Enable VCSA license
+  community.vmware.vcenter_license:
+    hostname: "{{ nested_vcsa.fqdn }}"
+    username: "{{ common.vsphere.user }}"
+    password: "{{ common.vsphere.password }}"
+    validate_certs: "{{ common.vsphere.validate_certs }}"
+    license: "{{ common.license.vcsa }}"
+    state: present
+
+- name: Enable ESXi license
+  community.vmware.vcenter_license:
+    hostname: "{{ nested_vcsa.fqdn }}"
+    username: "{{ common.vsphere.user }}"
+    password: "{{ common.vsphere.password }}"
+    validate_certs: "{{ common.vsphere.validate_certs }}"
+    esxi_hostname: "{{ item.value.fqdn }}"
+    license: "{{ common.license.esxi }}"
+    state: present
+  loop: "{{ nested_esxi.host | dict2items }}"

@@ -1,18 +1,33 @@
 ---
 # tasks file for deploy_nested_esxi
-- name: Deploy nested ESXi hosts
-  community.vmware.vmware_guest:
-    hostname: "{{ common.vsphere.fqdn }}"
-    username: "{{ common.vsphere.user }}"
-    password: "{{ common.vsphere.password }}"
+- name: Check if nested ESXi deployed
+  ansible.builtin.uri:
+    url: "https://{{ item.value.fqdn }}/ui/"
+    method: GET
+    status_code: 200
+    timeout: 3
     validate_certs: "{{ common.vsphere.validate_certs }}"
-    name: "{{ item.value.vm_name }}"
-    state: "present"
-    guest_id: "{{ item.value.guest_id }}"
-    # cluster: "{{ item.value.cluster }}"
-    datacenter: "{{ common.vsphere.datacenter }}"
-    folder: "{{ nested_esxi.common.folder }}"
-    disk:
+    return_content: true
+  loop: "{{ nested_esxi.host | dict2items }}"
+  ignore_errors: true
+  register: curl_result
+
+- name: Deploy nested ESXi block
+  when: curl_result.results | selectattr('status', 'eq', 200) | length != nested_esxi.host | dict2items | length
+  block:
+  - name: Deploy nested ESXi hosts
+    community.vmware.vmware_guest:
+      hostname: "{{ common.vsphere.fqdn }}"
+      username: "{{ common.vsphere.user }}"
+      password: "{{ common.vsphere.password }}"
+      validate_certs: "{{ common.vsphere.validate_certs }}"
+      name: "{{ item.value.vm_name }}"
+      state: "present"
+      guest_id: "{{ item.value.guest_id }}"
+      # cluster: "{{ item.value.cluster }}"
+      datacenter: "{{ common.vsphere.datacenter }}"
+      folder: "{{ nested_esxi.common.folder }}"
+      disk:
       - size_gb: "{{ nested_esxi.hardware_properties[item.value.cluster]['boot_size'] }}"
         type: "{{ nested_esxi.common.disk_provisioning }}"
         datastore: "{{ nested_esxi.common.datastore }}"
@@ -22,15 +37,15 @@
       - size_gb: "{{ item.value.datastore.capacity.size }}"
         type: "{{ nested_esxi.common.disk_provisioning }}"
         datastore: "{{ item.value.datastore.capacity.name }}"
-    hardware:
-      boot_firmware: "efi" # fixed
-      hotadd_cpu: true
-      hotadd_memory: true
-      nested_virt: true
-      num_cpu_cores_per_socket: 1
-      memory_mb: "{{ nested_esxi.hardware_properties[item.value.cluster]['memory'] }}"
-      num_cpus: "{{ nested_esxi.hardware_properties[item.value.cluster]['cpu'] }}"
-    networks:
+      hardware:
+        boot_firmware: "efi" # fixed
+        hotadd_cpu: true
+        hotadd_memory: true
+        nested_virt: true
+        num_cpu_cores_per_socket: 1
+        memory_mb: "{{ nested_esxi.hardware_properties[item.value.cluster]['memory'] }}"
+        num_cpus: "{{ nested_esxi.hardware_properties[item.value.cluster]['cpu'] }}"
+      networks:
       - name: "{{ common.vsphere.port_group.nested[0].name }}"
         device_type: "{{ common.vsphere.port_group.nested[0].type }}"
         connected: true
@@ -43,36 +58,36 @@
       - name: "{{ common.vsphere.port_group.nested[1].name }}"
         device_type: "{{ common.vsphere.port_group.nested[1].type }}"
         connected: true
-    cdrom:
+      cdrom:
       - controller_number: 0
         unit_number: 0
         type: "iso"
         state: "present"
         iso_path: "[{{ nested_esxi.common.datastore }}] {{ common.vsphere.datastore_path }}/{{ item.value.vm_name }}-kickstart.iso"
-  loop: "{{ nested_esxi.host | dict2items }}"
+    loop: "{{ nested_esxi.host | dict2items }}"
 
-- name: Power on Nested ESXi
-  community.vmware.vmware_guest_powerstate:
-    hostname: "{{ common.vsphere.fqdn }}"
-    username: "{{ common.vsphere.user }}"
-    password: "{{ common.vsphere.password }}"
-    validate_certs: "{{ common.vsphere.validate_certs }}"
-    datacenter: "{{ common.vsphere.datacenter }}"
-    name: "{{ item.value.vm_name }}"
-    state: "powered-on"
-  register: result
-  loop: "{{ nested_esxi.host | dict2items }}"
+  - name: Power on Nested ESXi
+    community.vmware.vmware_guest_powerstate:
+      hostname: "{{ common.vsphere.fqdn }}"
+      username: "{{ common.vsphere.user }}"
+      password: "{{ common.vsphere.password }}"
+      validate_certs: "{{ common.vsphere.validate_certs }}"
+      datacenter: "{{ common.vsphere.datacenter }}"
+      name: "{{ item.value.vm_name }}"
+      state: "powered-on"
+    register: result
+    loop: "{{ nested_esxi.host | dict2items }}"
 
-- name: Check ESXi management ui
-  ansible.builtin.uri:
-    url: "https://{{ item.value.fqdn }}/ui/"
-    method: GET
-    status_code: 200
-    timeout: 3
-    validate_certs: "{{ common.vsphere.validate_certs }}"
-    return_content: true
-  loop: "{{ nested_esxi.host | dict2items }}"
-  retries: 20
-  delay: 30
-  register: curl_result
-  until: curl_result.status != -1
+  - name: Check ESXi management ui
+    ansible.builtin.uri:
+      url: "https://{{ item.value.fqdn }}/ui/"
+      method: GET
+      status_code: 200
+      timeout: 3
+      validate_certs: "{{ common.vsphere.validate_certs }}"
+      return_content: true
+    loop: "{{ nested_esxi.host | dict2items }}"
+    retries: 20
+    delay: 30
+    register: curl_result
+    until: curl_result.status != -1
