@@ -5,7 +5,7 @@
     url: "https://{{ item.value.fqdn }}/ui/"
     method: GET
     status_code: 200
-    timeout: 3
+    timeout: 5
     validate_certs: "{{ common.vsphere.validate_certs }}"
     return_content: true
   loop: "{{ nested_esxi.host | dict2items }}"
