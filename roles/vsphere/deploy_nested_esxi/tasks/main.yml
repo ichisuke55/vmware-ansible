@@ -58,6 +58,12 @@
       - name: "{{ common.vsphere.port_group.nested[1].name }}"
         device_type: "{{ common.vsphere.port_group.nested[1].type }}"
         connected: true
+      - name: "{{ common.vsphere.port_group.nested[2].name }}"
+        device_type: "{{ common.vsphere.port_group.nested[2].type }}"
+        connected: true
+      - name: "{{ common.vsphere.port_group.nested[2].name }}"
+        device_type: "{{ common.vsphere.port_group.nested[2].type }}"
+        connected: true
       cdrom:
       - controller_number: 0
         unit_number: 0

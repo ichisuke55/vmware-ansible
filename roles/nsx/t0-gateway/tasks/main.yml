@@ -1,0 +1,62 @@
+---
+# tasks file for roles/nsx/t0-gateway
+- name: Create vlan segment for external network
+  vmware.ansible_for_nsxt.nsxt_policy_segment:
+    hostname: "{{ nested_nsx.fqdn }}"
+    username: "{{ nested_nsx.property.cli_username }}"
+    password: "{{ nested_nsx.property.cli_password }}"
+    validate_certs: "{{ nested_nsx.validate_certs }}"
+    display_name: "{{ nested_nsx.segment.external.name }}"
+    admin_state: "UP"
+    transport_zone_display_name: "{{ nested_nsx.transport_zone.vlan.name }}"
+    vlan_ids: "{{ nested_nsx.segment.external.vlan }}"
+    do_wait_till_create: true
+    state: "present"
+
+- name: Create tier-0 gateway
+  vmware.ansible_for_nsxt.nsxt_policy_tier0:
+    hostname: "{{ nested_nsx.fqdn }}"
+    username: "{{ nested_nsx.property.cli_username }}"
+    password: "{{ nested_nsx.property.cli_password }}"
+    validate_certs: "{{ nested_nsx.validate_certs }}"
+    display_name: "{{ nested_nsx.t0_gateway.name }}"
+    ha_mode: "{{ nested_nsx.t0_gateway.ha_mode }}"
+    state: "present"
+    locale_services:
+      - state: "present"
+        display_name: "{{ nested_nsx.t0_gateway.name }}_locale"
+        edge_cluster_info:
+          edge_cluster_display_name: "{{ nested_nsx.edge_cluster.name }}"
+        interfaces:
+          - display_name: "{{ nested_nsx.t0_gateway.interfaces.active.name }}"
+            state: "present"
+            subnets:
+              - ip_addresses: ["{{ nested_nsx.t0_gateway.interfaces.active.ipv4 }}"]
+                prefix_len: "{{ nested_nsx.t0_gateway.interfaces.active.netmask }}"
+            segment_display_name: "{{ nested_nsx.segment.external.name }}"
+            edge_node_info:
+              edge_cluster_display_name: "{{ nested_nsx.edge_cluster.name }}"
+              edge_node_display_name: "{{ nested_nsx.edges.edge01.fqdn }}"
+          - display_name: "{{ nested_nsx.t0_gateway.interfaces.standby.name }}"
+            state: "present"
+            subnets:
+              - ip_addresses: ["{{ nested_nsx.t0_gateway.interfaces.standby.ipv4 }}"]
+                prefix_len: "{{ nested_nsx.t0_gateway.interfaces.standby.netmask }}"
+            segment_display_name: "{{ nested_nsx.segment.external.name }}"
+            edge_node_info:
+              edge_cluster_display_name: "{{ nested_nsx.edge_cluster.name }}"
+              edge_node_display_name: "{{ nested_nsx.edges.edge02.fqdn }}"
+        BGP:
+          state: "present"
+          local_as_num: "{{ nested_nsx.t0_gateway.bgp.asn }}"
+          neighbors:
+            - display_name: "{{ nested_nsx.t0_gateway.bgp.name }}"
+              neighbor_address: "{{ nested_nsx.t0_gateway.bgp.neighbor }}"
+              remote_as_num: "{{ nested_nsx.t0_gateway.bgp.remote_asn }}"
+              state: "present"
+              bfd:
+                enabled: true
+              source_addresses:
+                - "{{ nested_nsx.t0_gateway.interfaces.active.ipv4 }}"
+                - "{{ nested_nsx.t0_gateway.interfaces.standby.ipv4 }}"
+        route_redistribution_types: "{{ nested_nsx.t0_gateway.route_redistribute_type }}"

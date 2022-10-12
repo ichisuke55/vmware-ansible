@@ -12,6 +12,8 @@ build:
   ovf_directory: "/home/ichisuke/vmware/ovf"
   vcsa_ova: "VMware-vCenter-Server-Appliance-7.0.3.00800-20150588_OVF10.ova"
   vcsa_iso: "VMware-VCSA-all-7.0.3-20150588.iso"
+  nsx_ova: "nsx-unified-appliance-3.2.1.1.0.20115694.ova"
+  nsx_edge_ova: "nsx-edge-3.2.1.1.0.20115700.ova"
 
 nested_esxi:
   host:
@@ -104,6 +106,21 @@ nested_esxi:
 
   network:
     dvs:
+      mgmt:
+        name: "nested_mgmt"
+        version: "7.0.3"
+        mtu: 9000
+        num_uplinks: 2
+        discovery_protocol: "lldp"
+        discovery_operation: "both"
+        port_group:
+          name: "pg_nested_mgmt"
+          state: "present"
+          vlan_id: "0-4094"
+          num_ports: 8
+        vmnics:
+          # - "vmnic0"
+          - "vmnic1"
       storage:
         name: "nested_storage"
         version: "7.0.3"
@@ -116,6 +133,24 @@ nested_esxi:
           state: "present"
           vlan_id: "0-4094"
           num_ports: 8
+        vmnics:
+          - "vmnic2"
+          - "vmnic3"
+      nsx:
+        name: "nsx"
+        version: "7.0.3"
+        mtu: 9000
+        num_uplinks: 2
+        discovery_protocol: "lldp"
+        discovery_operation: "both"
+        port_group:
+          name: "pg_nsx"
+          state: "present"
+          vlan_id: "0-4094"
+          num_ports: 8
+        vmnics:
+          - "vmnic4"
+          - "vmnic5"
 
 nested_vcsa:
   name: "nested_vcsa"
@@ -131,6 +166,102 @@ nested_vcsa:
     prefix: "24"
     gateway: "192.168.3.1"
 
+nested_nsx:
+  name: "nsx-mgr01"
+  fqdn: "nsx-mgr01.ichisuke.home"
+  validate_certs: false
+  disk_provi: "thin"
+  deploy_size: "small"
+  datastore: "datastore.nas02"
+  property:
+    admin_password: "VMware1!VMware1!"
+    cli_audit_username: "admin"
+    cli_audit_password: "VMware1!VMware1!"
+    cli_username: "admin"
+    cli_password: "VMware1!VMware1!"
+    allow_ssh_root_login: true
+    ssh_enable: true
+    nsx_role: "NSX Manager"
+  address:
+    ipv4: "192.168.3.224"
+    netmask: "24"
+    gateway: "192.168.3.1"
+  pool:
+    host_tep:
+      name: "tep-pool"
+      range_start: "192.168.101.2"
+      range_end: "192.168.101.10"
+      cidr: "192.168.101.0/24"
+      gw_ip: "192.168.101.1"
+    edge_tep:
+      name: "edge-pool"
+      range_start: "192.168.102.2"
+      range_end: "192.168.102.10"
+      cidr: "192.168.102.0/24"
+      gw_ip: "192.168.102.1"
+  edge_cluster:
+    name: "edge-cluster-1"
+  edges:
+    edge01:
+      name: "nsx-edge01"
+      fqdn: "nsx-edge01.ichisuke.home"
+      deploy_size: "medium"
+      address: "192.168.3.227"
+      netmask: "24"
+    edge02:
+      name: "nsx-edge02"
+      fqdn: "nsx-edge02.ichisuke.home"
+      deploy_size: "medium"
+      address: "192.168.3.228"
+      netmask: "24"
+  uplink_profile:
+    host:
+      name: "host-uplink-profile"
+      policy: "FAILOVER_ORDER"
+      transport_vlan: 101
+    edge:
+      name: "edge-uplink-profile"
+      policy: "FAILOVER_ORDER"
+      transport_vlan: 102
+  transport_zone:
+    overlay:
+      name: "overlay-tz"
+      type: "OVERLAY"
+    vlan:
+      name: "vlan-tz"
+      type: "VLAN"
+  host_transport_node_profile:
+    name: "host-tnp"
+  t1_gateway:
+    name: "t1-gw"
+    gateway_address: "172.16.1.1/24"
+    route_adv_type:
+      - "TIER1_CONNECTED"
+  t0_gateway:
+    name: "t0-gw"
+    ha_mode: "ACTIVE_STANDBY"
+    interfaces:
+      active:
+        name: "t0-active-intf"
+        ipv4: "192.168.103.11"
+        netmask: "24"
+      standby:
+        name: "t0-standby-intf"
+        ipv4: "192.168.103.12"
+        netmask: "24"
+    bgp:
+      name: "t0-bgp"
+      asn: "65001"
+      remote_asn: "65000"
+      neighbor: "192.168.103.1"
+    route_redistribute_type:
+      - "TIER1_CONNECTED"
+  segment:
+    external:
+      name: "external"
+      vlan: 103
+    overlay:
+      name: "t1-gw-segment"
 
 common:
   vsphere:
@@ -158,9 +289,15 @@ common:
           vlan_id: "0-4094"
           num_ports: 8
           type: "vmxnet3"
+        - name: "nsx"
+          state: "present"
+          vlan_id: "0-4094"
+          num_ports: 16
+          type: "vmxnet3"
   esxi:
     password: "VMware1!"
   dns:
+    domain: "ichisuke.home"
     primary:
       ipv4: "192.168.3.214"
     secondary:
@@ -189,4 +326,10 @@ common:
           34383432643539386532616438623439633836316530316161306561326133313365313661303330
           6535633639313634380a393133643164636462623637333636666237626433333239346665386633
           63666135363262363764646131633461363631383735373732333161646363643864
-
+    nsxt: !vault |
+          $ANSIBLE_VAULT;1.1;AES256
+          32376138353530623865653061313330373365313433323636636430623061303330396237393030
+          3735353939363833616532356166373335356461653634330a376435653662346535373661373765
+          36306330393065383262383339643839346236356134333965336266333735393939393433626638
+          3137356335303838620a643361316230333166663939626463663638626639306430396662316161
+          30383066323534353737373635613836613132313730633136366563396661396231

@@ -1,0 +1,25 @@
+---
+# tasks file for roles/nsx/t1-gateway
+- name: Create tier-1 gateway
+  vmware.ansible_for_nsxt.nsxt_policy_tier1:
+    hostname: "{{ nested_nsx.fqdn }}"
+    username: "{{ nested_nsx.property.cli_username }}"
+    password: "{{ nested_nsx.property.cli_password }}"
+    validate_certs: "{{ nested_nsx.validate_certs }}"
+    display_name: "{{ nested_nsx.t1_gateway.name }}"
+    tier0_display_name: "{{ nested_nsx.t0_gateway.name }}"
+    route_advertisement_types: "{{ nested_nsx.t1_gateway.route_adv_type }}"
+    state: "present"
+
+- name: Create attached t1 segment
+  vmware.ansible_for_nsxt.nsxt_policy_segment:
+    hostname: "{{ nested_nsx.fqdn }}"
+    username: "{{ nested_nsx.property.cli_username }}"
+    password: "{{ nested_nsx.property.cli_password }}"
+    validate_certs: "{{ nested_nsx.validate_certs }}"
+    display_name: "{{ nested_nsx.segment.overlay.name }}"
+    tier1_display_name: "{{ nested_nsx.t1_gateway.name }}"
+    subnets:
+      - gateway_address: "{{ nested_nsx.t1_gateway.gateway_address }}"
+    transport_zone_display_name: "{{ nested_nsx.transport_zone.overlay.name }}"
+    state: "present"

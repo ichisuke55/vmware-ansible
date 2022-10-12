@@ -1,0 +1,16 @@
+---
+# tasks file for roles/nsx/register_compute_manager
+- name: Register compute manager
+  vmware.ansible_for_nsxt.nsxt_fabric_compute_managers:
+    hostname: "{{ nested_nsx.address.ipv4 }}"
+    username: "{{ nested_nsx.property.cli_username }}"
+    password: "{{ nested_nsx.property.cli_password }}"
+    validate_certs: "{{ nested_nsx.validate_certs }}"
+    display_name: "{{ nested_vcsa.fqdn }}"
+    server: "{{ nested_vcsa.fqdn }}"
+    state: "present"
+    origin_type: "vCenter"
+    credential:
+      credential_type: "UsernamePasswordLoginCredential"
+      username: "{{ common.vsphere.user }}"
+      password: "{{ common.vsphere.password }}"

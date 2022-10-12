@@ -1,0 +1,66 @@
+---
+# tasks file for roles/nsx/host_transport_node
+- name: Create host transport node profile
+  vmware.ansible_for_nsxt.nsxt_transport_node_profiles:
+    hostname: "{{ nested_nsx.address.ipv4 }}"
+    username: "{{ nested_nsx.property.cli_username }}"
+    password: "{{ nested_nsx.property.cli_password }}"
+    validate_certs: "{{ nested_nsx.validate_certs }}"
+    resource_type: "TransportNodeProfile"
+    display_name: "{{ nested_nsx.host_transport_node_profile.name }}"
+    host_switch_spec:
+      resource_type: "StandardHostSwitchSpec"
+      host_switches:
+        - host_switch_profiles:
+          - name: "{{ nested_nsx.uplink_profile.host.name }}"
+            type: "UplinkHostSwitchProfile"
+          host_switch_type: "VDS"
+          host_switch_name: "{{ nested_esxi.network.dvs.nsx.name }}"
+          host_switch_mode: "STANDARD"
+          transport_zone_endpoints:
+            - transport_zone_name: "{{ nested_nsx.transport_zone.overlay.name }}"
+            - transport_zone_name: "{{ nested_nsx.transport_zone.vlan.name }}"
+          ip_assignment_spec:
+            resource_type: "StaticIpPoolSpec"
+            ip_pool_name: "{{ nested_nsx.pool.host_tep.name }}"
+          uplinks:
+            - uplink_name: "uplink-1"
+              vds_uplink_name: "Uplink 1"
+            - uplink_name: "uplink-2"
+              vds_uplink_name: "Uplink 2"
+    state: "present"
+
+- name: Attach host transport node profile to esxi cluster
+  vmware.ansible_for_nsxt.nsxt_transport_node_collections:
+    hostname: "{{ nested_nsx.address.ipv4 }}"
+    username: "{{ nested_nsx.property.cli_username }}"
+    password: "{{ nested_nsx.property.cli_password }}"
+    validate_certs: "{{ nested_nsx.validate_certs }}"
+    resource_type: "TransportNodeCollection"
+    display_name: "{{ nested_nsx.host_transport_node_profile.name }}"
+    description: "attached by ansible"
+    compute_manager_name: "{{ nested_vcsa.fqdn }}"
+    cluster_name: "{{ nested_vcsa.cluster }}"
+    transport_node_profile_name: "{{ nested_nsx.host_transport_node_profile.name }}"
+    state: "present"
+
+- name: Wait for completing attached tnp
+  vmware.ansible_for_nsxt.nsxt_transport_nodes_facts:
+    hostname: "{{ nested_nsx.address.ipv4 }}"
+    username: "{{ nested_nsx.property.cli_username }}"
+    password: "{{ nested_nsx.property.cli_password }}"
+    validate_certs: "{{ nested_nsx.validate_certs }}"
+  retries: 120
+  delay: 10
+
+- name: Wait until transport zondes are "Up" state
+  ansible.builtin.uri:
+    url: "https://{{ nested_nsx.fqdn }}/api/v1/transport-zones/status"
+    user: "{{ nested_nsx.property.cli_username }}"
+    password: "{{ nested_nsx.property.cli_password }}"
+    validate_certs: "{{ nested_nsx.validate_certs }}"
+    method: "GET"
+    force_basic_auth: true
+    return_content: true
+  register: result
+  until: result.json.up_count > 0

@@ -1,2 +1,11 @@
 ---
 # handlers file for roles/vsphere/enable_iscsi
+- name: rescan_hba
+  community.vmware.vmware_host_scanhba:
+    hostname: "{{ nested_vcsa.fqdn }}"
+    username: "{{ common.vsphere.user }}"
+    password: "{{ common.vsphere.password }}"
+    validate_certs: "{{ common.vsphere.validate_certs }}"
+    esxi_hostname: "{{ item.value.fqdn }}"
+    rescan_hba: true
+  loop: "{{ nested_esxi.host | dict2items }}"

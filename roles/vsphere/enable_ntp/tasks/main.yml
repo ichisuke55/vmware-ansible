@@ -11,6 +11,7 @@
       - "{{ common.ntp.primary.ipv4 }}"
       - "{{ common.ntp.secondary.ipv4 }}"
     state: "present"
+  register: result
 
 - name: Start ntpd service at nested esxi cluster
   community.vmware.vmware_host_service_manager:
@@ -22,3 +23,4 @@
     service_name: "ntpd"
     service_policy: "on"
     state: "start"
+  when: result.changed == true

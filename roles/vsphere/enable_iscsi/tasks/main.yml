@@ -23,15 +23,16 @@
         address: "{{ nested_esxi.common.iscsi.target_address }}"
     state: "present"
   loop: "{{ nested_esxi.host | dict2items }}"
-  register: add_dynamic_target_result
+  notify: rescan_hba
+#   register: add_dynamic_target_result
 
-- name: Rescan HBA
-  community.vmware.vmware_host_scanhba:
-    hostname: "{{ nested_vcsa.fqdn }}"
-    username: "{{ common.vsphere.user }}"
-    password: "{{ common.vsphere.password }}"
-    validate_certs: "{{ common.vsphere.validate_certs }}"
-    esxi_hostname: "{{ item.value.fqdn }}"
-    rescan_hba: true
-  loop: "{{ nested_esxi.host | dict2items }}"
-  when: add_dynamic_target_result.changed == true
+# - name: Rescan HBA
+#   community.vmware.vmware_host_scanhba:
+#     hostname: "{{ nested_vcsa.fqdn }}"
+#     username: "{{ common.vsphere.user }}"
+#     password: "{{ common.vsphere.password }}"
+#     validate_certs: "{{ common.vsphere.validate_certs }}"
+#     esxi_hostname: "{{ item.value.fqdn }}"
+#     rescan_hba: true
+#   loop: "{{ nested_esxi.host | dict2items }}"
+#   when: add_dynamic_target_result.changed == true

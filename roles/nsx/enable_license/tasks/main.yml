@@ -1,0 +1,10 @@
+---
+# tasks file for roles/nsx/enable_license
+- name: Enable license
+  vmware.ansible_for_nsxt.nsxt_licenses:
+    hostname: "{{ nested_nsx.address.ipv4 }}"
+    username: "{{ nested_nsx.property.cli_username }}"
+    password: "{{ nested_nsx.property.cli_password }}"
+    validate_certs: "{{ nested_nsx.validate_certs }}"
+    license_key: "{{ common.license.nsxt }}"
+    state: present

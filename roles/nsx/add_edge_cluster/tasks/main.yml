@@ -1,0 +1,23 @@
+---
+# tasks file for roles/nsx/add_edge_cluster
+- name: Set slice for tn name
+  ansible.builtin.set_fact:
+    edge_members: >-
+      {{ edge_members | default([]) + [{'transport_node_name': item.value.fqdn}] }}
+  loop: '{{ nested_nsx.edges | dict2items }}'
+
+- name: Add edge cluster
+  vmware.ansible_for_nsxt.nsxt_edge_clusters:
+    hostname: "{{ nested_nsx.address.ipv4 }}"
+    username: "{{ nested_nsx.property.cli_username }}"
+    password: "{{ nested_nsx.property.cli_password }}"
+    validate_certs: "{{ nested_nsx.validate_certs }}"
+    display_name: "{{ nested_nsx.edge_cluster.name }}"
+    members: "{{ edge_members }}"
+    state: "present"
+  register: result
+  until: result is not failed
+  retries: 60
+  delay: 10
+  when: skip_edge_operation is undefined
+

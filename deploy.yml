@@ -11,6 +11,20 @@
     - vsphere/nested_cluster
     - vsphere/add_host_cluster
     - vsphere/add_nested_dvs
+    - vsphere/join_host_dvs
     - vsphere/enable_iscsi
     - vsphere/enable_ntp
     - vsphere/enable_license
+    # NSX
+    - nsx/deploy_nsx_manager
+    - nsx/enable_license
+    - nsx/deploy_nsx_edge
+    - nsx/add_ip_pools
+    - nsx/register_compute_manager
+    - nsx/add_transport_zones
+    - nsx/add_uplink_profile
+    - nsx/host_transport_node
+    - nsx/edge_transport_node
+    - nsx/add_edge_cluster
+    - nsx/t0-gateway
+    - nsx/t1-gateway

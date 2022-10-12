@@ -1,0 +1,21 @@
+---
+# tasks file for roles/nsx/add_transport_zones
+- name: Add overlay transport zone
+  vmware.ansible_for_nsxt.nsxt_transport_zones:
+    hostname: "{{ nested_nsx.address.ipv4 }}"
+    username: "{{ nested_nsx.property.cli_username }}"
+    password: "{{ nested_nsx.property.cli_password }}"
+    validate_certs: "{{ nested_nsx.validate_certs }}"
+    display_name: "{{ nested_nsx.transport_zone.overlay.name }}"
+    transport_type: "{{ nested_nsx.transport_zone.overlay.type }}"
+    state: "present"
+
+- name: Add vlan transport zone
+  vmware.ansible_for_nsxt.nsxt_transport_zones:
+    hostname: "{{ nested_nsx.address.ipv4 }}"
+    username: "{{ nested_nsx.property.cli_username }}"
+    password: "{{ nested_nsx.property.cli_password }}"
+    validate_certs: "{{ nested_nsx.validate_certs }}"
+    display_name: "{{ nested_nsx.transport_zone.vlan.name }}"
+    transport_type: "{{ nested_nsx.transport_zone.vlan.type }}"
+    state: "present"

@@ -1,0 +1,36 @@
+---
+# tasks file for roles/nsx/add_uplink_profile
+- name: Add host uplink profile
+  vmware.ansible_for_nsxt.nsxt_uplink_profiles:
+    hostname: "{{ nested_nsx.address.ipv4 }}"
+    username: "{{ nested_nsx.property.cli_username }}"
+    password: "{{ nested_nsx.property.cli_password }}"
+    validate_certs: "{{ nested_nsx.validate_certs }}"
+    display_name: "{{ nested_nsx.uplink_profile.host.name }}"
+    transport_vlan: "{{ nested_nsx.uplink_profile.host.transport_vlan }}"
+    resource_type: "UplinkHostSwitchProfile"
+    state: "present"
+    teaming:
+      policy: "{{ nested_nsx.uplink_profile.host.policy }}"
+      active_list:
+        - uplink_name: "uplink-1"
+          uplink_type: PNIC
+      standby_list:
+        - uplink_name: "uplink-2"
+          uplink_type: PNIC
+
+- name: Add edge uplink profile
+  vmware.ansible_for_nsxt.nsxt_uplink_profiles:
+    hostname: "{{ nested_nsx.address.ipv4 }}"
+    username: "{{ nested_nsx.property.cli_username }}"
+    password: "{{ nested_nsx.property.cli_password }}"
+    validate_certs: "{{ nested_nsx.validate_certs }}"
+    display_name: "{{ nested_nsx.uplink_profile.edge.name }}"
+    transport_vlan: "{{ nested_nsx.uplink_profile.edge.transport_vlan }}"
+    resource_type: "UplinkHostSwitchProfile"
+    state: "present"
+    teaming:
+      policy: "{{ nested_nsx.uplink_profile.edge.policy }}"
+      active_list:
+        - uplink_name: "uplink-1"
+          uplink_type: PNIC

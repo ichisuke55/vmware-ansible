@@ -1,0 +1,13 @@
+---
+# tasks file for roles/vsphere/join_host_dvs
+- name: Join nested esxi hosts dvs switches
+  community.vmware.vmware_dvs_host:
+    hostname: "{{ nested_vcsa.fqdn }}"
+    username: "{{ common.vsphere.user }}"
+    password: "{{ common.vsphere.password }}"
+    validate_certs: "{{ common.vsphere.validate_certs }}"
+    esxi_hostname: "{{ item.1.value.fqdn }}"
+    switch_name: "{{ item.0.value.name }}"
+    vmnics: "{{ item.0.value.vmnics }}"
+    state: present
+  loop: "{{ nested_esxi.network.dvs | dict2items | product(nested_esxi.host | dict2items) }}"

@@ -1,0 +1,77 @@
+---
+# tasks file for roles/nsx/deploy_nsx_edge
+- name: Get Token from NSX manager
+  ansible.builtin.uri:
+    url: "https://{{ nested_nsx.address.ipv4 }}/api/v1/aaa/registration-token"
+    user: "{{ nested_nsx.property.cli_username }}"
+    password: "{{ nested_nsx.property.cli_password }}"
+    method: "POST"
+    force_basic_auth: true
+    validate_certs: "{{ common.vsphere.validate_certs }}"
+    return_content: true
+  register: token_result
+
+- name: Deploy NSX Edge
+  community.vmware.vmware_deploy_ovf:
+    hostname: "{{ common.vsphere.fqdn }}"
+    username: "{{ common.vsphere.user }}"
+    password: "{{ common.vsphere.password }}"
+    validate_certs: "{{ common.vsphere.validate_certs }}"
+    name: "{{ item.value.name }}"
+    datacenter: "{{ common.vsphere.datacenter }}"
+    datastore: "{{ nested_nsx.datastore }}"
+    disk_provisioning: "{{ nested_nsx.disk_provi }}"
+    deployment_option: "{{ item.value.deploy_size }}"
+    ova: "{{ build.ovf_directory }}/{{ build.nsx_edge_ova }}"
+    wait: true
+    power_on: false
+    allow_duplicates: false
+    networks:
+      "Network 0": "{{ common.vsphere.port_group.nested[0].name }}"
+      "Network 1": "{{ common.vsphere.port_group.nested[2].name }}"
+      "Network 2": "{{ common.vsphere.port_group.nested[2].name }}"
+      "Network 3": "{{ common.vsphere.port_group.nested[2].name }}"
+      "Network 4": "{{ common.vsphere.port_group.nested[2].name }}"
+    inject_ovf_env: true
+    properties:
+      nsx_cli_audit_passwd_0: "{{ nested_nsx.property.cli_audit_password }}"
+      nsx_cli_passwd_0: "{{ nested_nsx.property.cli_password }}"
+      nsx_allowSSHRootLogin: "{{ nested_nsx.property.allow_ssh_root_login }}"
+      nsx_isSSHEnabled: "{{ nested_nsx.property.ssh_enable }}"
+      nsx_ip_0: "{{ item.value.address }}"
+      nsx_netmask_0: "{{ item.value.netmask }}"
+      nsx_dns1_0: "{{ common.dns.primary.ipv4 }}"
+      nsx_domain_0: "{{ common.dns.domain }}"
+      nsx_gateway_0: "{{ nested_nsx.address.gateway }}"
+      nsx_ntp_0: "{{ common.ntp.primary.ipv4 }}"
+      nsx_passwd_0: "{{ nested_nsx.property.admin_password }}"
+      nsx_hostname: "{{ item.value.fqdn }}"
+      mpIp: "{{ nested_nsx.address.ipv4 }}"
+      mpToken: "{{ token_result.json.token }}"
+      mpThumbprint: "{{ mp_api_thumbprint }}"
+  loop: "{{ nested_nsx.edges | dict2items }}"
+  async: 3600
+  poll: 0
+  register: nsx_edge_deploy_result
+
+- name: Check if NSX-T edge deployed
+  ansible.builtin.async_status:
+    jid: "{{ item.ansible_job_id }}"
+  register: job_result
+  until: job_result.finished
+  loop: "{{ nsx_edge_deploy_result.results }}"
+  retries: 240
+  delay: 20
+
+- name: Power on NSX-T edge
+  community.vmware.vmware_guest:
+    hostname: "{{ common.vsphere.fqdn }}"
+    username: "{{ common.vsphere.user }}"
+    password: "{{ common.vsphere.password }}"
+    validate_certs: "{{ common.vsphere.validate_certs }}"
+    name: "{{ item.value.name }}"
+    state: poweredon
+    wait_for_ip_address: true
+  async: 3600
+  poll: 0
+  loop: "{{ nested_nsx.edges | dict2items }}"

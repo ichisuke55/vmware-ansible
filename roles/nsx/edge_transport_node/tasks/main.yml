@@ -1,0 +1,88 @@
+---
+# tasks file for roles/nsx/edge_transport_node
+- name: Fetch transport zones
+  vmware.ansible_for_nsxt.nsxt_transport_zones_facts:
+    hostname: "{{ nested_nsx.fqdn }}"
+    username: "{{ nested_nsx.property.cli_username }}"
+    password: "{{ nested_nsx.property.cli_password }}"
+    validate_certs: "{{ nested_nsx.validate_certs }}"
+  register: tz_result
+
+- name: Set var overlay_tz_id
+  ansible.builtin.set_fact:
+    overlay_tz_id: '{{ item.id }}'
+  when: item.display_name == nested_nsx.transport_zone.overlay.name
+  loop: '{{ tz_result.results }}'
+
+- name: Set var edge_vlan_tz_id
+  ansible.builtin.set_fact:
+    vlan_tz_id: '{{ item.id }}'
+  when: item.display_name == nested_nsx.transport_zone.vlan.name
+  loop: '{{ tz_result.results }}'
+
+- name: Fetch to Edge uplink profile uuid
+  vmware.ansible_for_nsxt.nsxt_uplink_profiles_facts:
+    hostname: "{{ nested_nsx.fqdn }}"
+    username: "{{ nested_nsx.property.cli_username }}"
+    password: "{{ nested_nsx.property.cli_password }}"
+    validate_certs: "{{ nested_nsx.validate_certs }}"
+  register: uplink_result
+
+- name: Set var edge_uplink_profile_id
+  ansible.builtin.set_fact:
+    edge_uplink_profile_id: '{{ item.id }}'
+  when: item.display_name == nested_nsx.uplink_profile.edge.name
+  loop: '{{ uplink_result.results }}'
+
+- name: Fetch Edge IP Pool uuid
+  vmware.ansible_for_nsxt.nsxt_ip_pools_facts:
+    hostname: "{{ nested_nsx.fqdn }}"
+    username: "{{ nested_nsx.property.cli_username }}"
+    password: "{{ nested_nsx.property.cli_password }}"
+    validate_certs: "{{ nested_nsx.validate_certs }}"
+  register: pool_result
+
+- name: Set var ip_pool_id
+  ansible.builtin.set_fact:
+    ip_pool_id: '{{ item.id }}'
+  when: item.display_name == nested_nsx.pool.edge_tep.name
+  loop: '{{ pool_result.results }}'
+
+- name: Get nsxt edge ids
+  vmware.ansible_for_nsxt.nsxt_transport_nodes_facts:
+    hostname: "{{ nested_nsx.fqdn }}"
+    username: "{{ nested_nsx.property.cli_username }}"
+    password: "{{ nested_nsx.property.cli_password }}"
+    validate_certs: "{{ nested_nsx.validate_certs }}"
+  register: edge_tn_result
+  retries: 60
+  delay: 5
+
+- name: Concat edge list
+  ansible.builtin.set_fact:
+    edges: >-
+      {%- set edge_list = [] -%}
+      {%- for n in edge_tn_result.results -%}
+      {%- if n.node_deployment_info.resource_type == "EdgeNode" -%}
+      {%- set tmp_dict = {} -%}
+      {%- set _ = tmp_dict.update({"id": n.id}) -%}
+      {%- set _ = tmp_dict.update({"name": n.display_name}) -%}
+      {%- set _ = tmp_dict.update({"revision": n._revision}) -%}
+      {%- set _ = edge_list.append(tmp_dict) -%}
+      {%- endif -%}
+      {%- endfor -%}
+      {{ edge_list }}
+
+- name: Update nsx edge transport node information
+  ansible.builtin.uri:
+    url: "https://{{ nested_nsx.fqdn }}/api/v1/transport-nodes/{{ item.id }}"
+    user: "{{ nested_nsx.property.cli_username }}"
+    password: "{{ nested_nsx.property.cli_password }}"
+    validate_certs: "{{ nested_nsx.validate_certs }}"
+    force_basic_auth: true
+    headers:
+      Content-Type: "application/json"
+    body_format: "json"
+    body: "{{ lookup('template', 'edge_tn_failover.j2') }}"
+    method: "PUT"
+  loop: "{{ edges }}"

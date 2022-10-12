@@ -1,0 +1,20 @@
+---
+# tasks file for roles/nsx/add_ip_pools
+- name: Add IP pools for TEP
+  vmware.ansible_for_nsxt.nsxt_policy_ip_pool:
+    hostname: "{{ nested_nsx.address.ipv4 }}"
+    username: "{{ nested_nsx.property.cli_username }}"
+    password: "{{ nested_nsx.property.cli_password }}"
+    validate_certs: "{{ nested_nsx.validate_certs }}"
+    display_name: "{{ item.value.name }}"
+    pool_static_subnets:
+      - display_name: "{{ item.value.name }}"
+        state: "present"
+        allocation_ranges:
+          - start: "{{ item.value.range_start }}"
+            end: "{{ item.value.range_end }}"
+        cidr: "{{ item.value.cidr }}"
+        gateway_ip: "{{ item.value.gw_ip }}"
+        do_wait_till_create: true
+    state: "present"
+  loop: "{{ nested_nsx.pool | dict2items }}"
