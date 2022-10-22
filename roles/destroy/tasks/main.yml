@@ -1,0 +1,43 @@
+---
+# tasks file for roles/destroy
+- name: Gather all vms
+  community.vmware.vmware_vm_info:
+    hostname: "{{ common.vsphere.fqdn }}"
+    username: "{{ common.vsphere.user }}"
+    password: "{{ common.vsphere.password }}"
+    validate_certs: "{{ common.vsphere.validate_certs }}"
+  register: result
+
+- name: Debug
+  debug:
+    msg: "{{ result }}"
+
+- name: List folders
+  community.vmware.vmware_folder_info:
+    hostname: "{{ common.vsphere.fqdn }}"
+    username: "{{ common.vsphere.user }}"
+    password: "{{ common.vsphere.password }}"
+    validate_certs: "{{ common.vsphere.validate_certs }}"
+    datacenter: "{{ common.vsphere.datacenter }}"
+
+- name: Delete folder
+  community.vmware.vcenter_folder:
+    hostname: "{{ common.vsphere.fqdn }}"
+    username: "{{ common.vsphere.user }}"
+    password: "{{ common.vsphere.password }}"
+    validate_certs: "{{ common.vsphere.validate_certs }}"
+    datacenter_name: "{{ common.vsphere.datacenter }}"
+    folder_name: "hoge2"
+    folder_type: "vm"
+    state: "absent"
+
+- name: Delete resource pool
+  community.vmware.vmware_resource_pool:
+    hostname: "{{ common.vsphere.fqdn }}"
+    username: "{{ common.vsphere.user }}"
+    password: "{{ common.vsphere.password }}"
+    validate_certs: "{{ common.vsphere.validate_certs }}"
+    datacenter: "{{ common.vsphere.datacenter }}"
+    parent_resource_pool: "hoge1"
+    resource_pool: "hoge2"
+    state: "absent"

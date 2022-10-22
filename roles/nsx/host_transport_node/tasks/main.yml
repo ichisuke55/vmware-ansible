@@ -53,7 +53,7 @@
   retries: 120
   delay: 10
 
-- name: Wait until transport zondes are "Up" state
+- name: Wait until transport zones are "Up" state
   ansible.builtin.uri:
     url: "https://{{ nested_nsx.fqdn }}/api/v1/transport-zones/status"
     user: "{{ nested_nsx.property.cli_username }}"
