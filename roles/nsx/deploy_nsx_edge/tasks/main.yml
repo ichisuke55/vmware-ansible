@@ -22,7 +22,7 @@
     datastore: "{{ nested_nsx.datastore }}"
     disk_provisioning: "{{ nested_nsx.disk_provi }}"
     deployment_option: "{{ item.value.deploy_size }}"
-    ova: "{{ build.ovf_directory }}/{{ build.nsx_edge_ova }}"
+    ova: "{{ build.iso_directory }}/{{ build.nsx_edge_ova }}"
     wait: true
     power_on: false
     allow_duplicates: false

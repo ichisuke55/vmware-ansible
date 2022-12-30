@@ -38,7 +38,7 @@ esxcli system settings advanced set -o /UserVars/SuppressShellWarning -i 1
 # esxcli storage core claiming reclaim -d "$(esxcli storage core device capacity list | grep `expr {{ item.value.datastore.cache.size }} \* 1024`\ MiB | sed 's/.*\(mpx.*L[0-9]\).*/\1/')"
 
 # Mark vsan capacity disk as Hard Disk Drive (i.e. NOT Flash) in case storage on physical host is Flash/SSD.  Required to ensure auto-claiming of drives for vsan is handled properly.
-# esxcli storage nmp satp rule add -s VMW_SATP_LOCAL -d "$(esxcli storage core device capacity list | grep `expr {{ item.value.capacity.size }} \* 1024`\ MiB | sed 's/.*\(mpx.*L[0-9]\).*/\1/')" -o disable_ssd
+# esxcli storage nmp satp rule add -s VMW_SATP_LOCAL -d "$(esxcli storage core device capacity list | grep `expr {{ item.value.datastore.capacity.size }} \* 1024`\ MiB | sed 's/.*\(mpx.*L[0-9]\).*/\1/')" -o disable_ssd
 
 # Disable CEIP
 esxcli system settings advanced set -o /UserVars/HostClientCEIPOptIn -i 2

@@ -14,7 +14,7 @@
     deployment_option: "{{ nested_vcsa.deploy_size }}"
     networks:
       "Network 1": "{{ common.vsphere.port_group.nested[0].name }}"
-    ovf: "{{ build.ovf_directory }}/{{ build.vcsa_ova }}"
+    ovf: "{{ build.iso_directory }}/{{ build.vcsa_ova }}"
     wait_for_ip_address: true
     inject_ovf_env: true
     properties:

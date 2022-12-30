@@ -96,4 +96,4 @@
     retries: 20
     delay: 30
     register: curl_result
-    until: curl_result.status != -1
+    until: curl_result.status == 200

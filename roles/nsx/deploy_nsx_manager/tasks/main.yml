@@ -25,7 +25,7 @@
       deployment_option: "{{ nested_nsx.deploy_size }}"
       networks:
         "Network 1": "{{ common.vsphere.port_group.nested[0].name }}"
-      ova: "{{ build.ovf_directory }}/{{ build.nsx_ova }}"
+      ova: "{{ build.iso_directory }}/{{ build.nsx_ova }}"
       wait: true
       power_on: false
       fail_on_spec_warnings: true

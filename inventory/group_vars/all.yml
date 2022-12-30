@@ -3,16 +3,15 @@ esxi_version: "7.x" # 6.x|7.x
 build:
   temp_folder: "/tmp/isos"
   mount_point: "/mnt/iso"
-  iso_directory: "/home/ichisuke/vmware/iso"
+  iso_directory: "/mnt/nfs/iso/vmware"
   template_file: "esxi_kickstart.j2"
   esxi_installer: "ESXi-Installer-{{ esxi_version }}"
-  iso_file: "VMware-VMvisor-Installer-7.0U3f-20036589.x86_64.iso"
+  iso_file: "esxi/VMware-VMvisor-Installer-7.0U3f-20036589.x86_64.iso"
   # below vcsa
-  ovf_directory: "/home/ichisuke/vmware/ovf"
-  vcsa_ova: "VMware-vCenter-Server-Appliance-7.0.3.00800-20150588_OVF10.ova"
-  vcsa_iso: "VMware-VCSA-all-7.0.3-20150588.iso"
-  nsx_ova: "nsx-unified-appliance-3.2.1.1.0.20115694.ova"
-  nsx_edge_ova: "nsx-edge-3.2.1.1.0.20115700.ova"
+  vcsa_ova: "vcsa/VMware-vCenter-Server-Appliance-7.0.3.00800-20150588_OVF10.ova"
+  vcsa_iso: "vcsa/VMware-VCSA-all-7.0.3-20395099.iso"
+  nsx_ova: "nsxt/3.2.1.1/nsx-unified-appliance-3.2.1.1.0.20115694.ova"
+  nsx_edge_ova: "nsxt/3.2.1.1/nsx-edge-3.2.1.1.0.20115700.ova"
 
 nested_esxi:
   host:
@@ -96,7 +95,7 @@ nested_esxi:
     password: "VMware1!"
     validate_certs: false
     disk_provisioning: "thin"
-    datastore: "datastore.nas01"
+    datastore: "datastore.nas02"
     folder: "/nested_vms/"
     iscsi:
       vmhba_name: "vmhba65"
@@ -153,7 +152,7 @@ nested_esxi:
 
 nested_vcsa:
   name: "nested_vcsa"
-  datastore: "datastore.nas01"
+  datastore: "datastore.nas02"
   datacenter: "nested_dc"
   cluster: "nested_cluster_a"
   disk_provi: "thin"
@@ -269,7 +268,7 @@ common:
     password: "VMware1!"
     validate_certs: false
     datacenter: "HomeLabDC"
-    datastore: "datastore.nas01"
+    datastore: "datastore.nas02"
     datastore_path: "ISOs"
     dvs:
       name: "management"
