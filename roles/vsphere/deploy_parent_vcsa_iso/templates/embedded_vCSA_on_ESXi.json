@@ -1,42 +1,29 @@
 {
     "__version": "2.13.0",
-    "__comments": "Sample template to deploy a vCenter Server Appliance with an embedded Platform Services Controller on a vCenter Server instance.",
+    "__comments": "Sample template to deploy a vCenter Server Appliance with an embedded Platform Services Controller on an ESXi host.",
     "new_vcsa": {
-        "vc": {
-            "__comments": [
-                "'datacenter' must end with a datacenter name, and only with a datacenter name. ",
-                "'target' must end with an ESXi hostname, a cluster name, or a resource pool name. ",
-                "The item 'Resources' must precede the resource pool name. ",
-                "All names are case-sensitive. ",
-                "For details and examples, refer to template help, i.e. vcsa-deploy {install|upgrade|migrate} --template-help"
-            ],
-            "hostname": "{{ common.vsphere.fqdn }}",
-            "username": "{{ common.vsphere.user }}",
-            "password": "{{ common.vsphere.password }}",
-            "deployment_network": "{{ common.vsphere.port_group.nested[0].name }}",
-            "datacenter": [
-                "{{ common.vsphere.datacenter }}"
-            ],
-            "datastore": "{{ common.vsphere.datastore }}",
-            "target": [
-                "{{ common.vsphere.cluster }}"
-            ]
+        "esxi": {
+            "hostname": "{{ parent_esxi.host.esxi03.fqdn }}",
+            "username": "root",
+            "password": "{{ parent_esxi.common.password }}",
+            "deployment_network": "VM Network",
+            "datastore": "{{ parent_esxi.common.datastore }}"
         },
         "appliance": {
             "__comments": [
                 "You must provide the 'deployment_option' key with a value, which will affect the vCenter Server Appliance's configuration parameters, such as the vCenter Server Appliance's number of vCPUs, the memory size, the storage size, and the maximum numbers of ESXi hosts and VMs which can be managed. For a list of acceptable values, run the supported deployment sizes help, i.e. vcsa-deploy --supported-deployment-sizes"
             ],
             "thin_disk_mode": true,
-            "deployment_option": "{{ nested_vcsa.deploy_size}}",
-            "name": "{{ nested_vcsa.name }}"
+            "deployment_option": "{{ common.vsphere.deploy_size }}",
+            "name": "{{ common.vsphere.fqdn }}"
         },
         "network": {
             "ip_family": "ipv4",
             "mode": "static",
-            "system_name": "{{ nested_vcsa.fqdn }}",
-            "ip": "{{ nested_vcsa.address.ipv4 }}",
-            "prefix": "{{ nested_vcsa.address.prefix }}",
-            "gateway": "{{ nested_vcsa.address.gateway }}",
+            "system_name": "{{ common.vsphere.fqdn }}",
+            "ip": "{{ common.vsphere.address.ipv4 }}",
+            "prefix": "{{ common.vsphere.address.prefix }}",
+            "gateway": "{{ common.vsphere.address.gateway }}",
             "dns_servers": [
                 "{{ common.dns.primary.ipv4 }}",
                 "{{ common.dns.secondary.ipv4 }}"
@@ -45,7 +32,7 @@
         "os": {
             "password": "{{ common.vsphere.password }}",
             "ntp_servers": "{{ common.ntp.primary.ipv4 }}",
-            "ssh_enable": true
+            "ssh_enable": false
         },
         "sso": {
             "password": "{{ common.vsphere.password }}",

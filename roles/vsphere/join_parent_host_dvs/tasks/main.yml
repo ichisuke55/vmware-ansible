@@ -1,0 +1,13 @@
+---
+# tasks file for roles/vsphere/join_parent_host_dvs
+- name: Join parent esxi hosts dvs switches
+  community.vmware.vmware_dvs_host:
+    hostname: "{{ common.vsphere.fqdn }}"
+    username: "{{ common.vsphere.user }}"
+    password: "{{ common.vsphere.password }}"
+    validate_certs: "{{ common.vsphere.validate_certs }}"
+    esxi_hostname: "{{ item.1.value.fqdn }}"
+    switch_name: "{{ item.0.value.name }}"
+    vmnics: "{{ item.1.value.vmnic }}"
+    state: present
+  loop: "{{ parent_esxi.network.dvs | dict2items | product(parent_esxi.host | dict2items) }}"

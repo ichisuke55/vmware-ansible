@@ -1,0 +1,32 @@
+---
+# tasks file for roles/vsphere/add_parent_dvs
+- name: Create multiple dvses for parent esxi hosts
+  community.vmware.vmware_dvswitch:
+    hostname: "{{ common.vsphere.fqdn }}"
+    username: "{{ common.vsphere.user }}"
+    password: "{{ common.vsphere.password }}"
+    validate_certs: "{{ common.vsphere.validate_certs }}"
+    datacenter_name: "{{ common.vsphere.datacenter }}"
+    switch_name: "{{ item.value.name }}"
+    switch_version: "{{ item.value.version }}"
+    mtu: "{{ item.value.mtu }}"
+    uplink_quantity: "{{ item.value.num_uplinks }}"
+    discovery_operation: "{{ item.value.discovery_operation }}"
+    discovery_protocol: "{{ item.value.discovery_protocol }}"
+    state: "present"
+  loop: "{{ parent_esxi.network.dvs | dict2items }}"
+
+- name: Create port groups on deployed dvses
+  community.vmware.vmware_dvs_portgroup:
+    hostname: "{{ common.vsphere.fqdn }}"
+    username: "{{ common.vsphere.user }}"
+    password: "{{ common.vsphere.password }}"
+    validate_certs: "{{ common.vsphere.validate_certs }}"
+    portgroup_name: "{{ item.value.port_group.name }}"
+    switch_name: "{{ item.value.name }}"
+    port_binding: "static"
+    vlan_id: "{{ item.value.port_group.vlan_id }}"
+    vlan_trunk: true
+    num_ports: "{{ item.value.port_group.num_ports }}"
+    state: "{{ item.value.port_group.state }}"
+  loop: "{{ parent_esxi.network.dvs | dict2items }}"

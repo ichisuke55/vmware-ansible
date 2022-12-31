@@ -1,0 +1,68 @@
+---
+# tasks file for roles/vsphere/deploy_nested_vcsa_iso
+- name: Check if VCSA deployed
+  ansible.builtin.uri:
+    url: "https://{{ common.vsphere.fqdn }}/ui"
+    timeout: 3
+    validate_certs: "{{ common.vsphere.validate_certs }}"
+    return_content: true
+  ignore_errors: true
+  register: check_result
+
+- name: Deploy VCSA block
+  when: check_result.status != 200
+  block:
+  - name: Mount VCSA iso
+    ansible.posix.mount:
+      path: "{{ build.mount_point }}"
+      src: "{{ build.iso_directory }}/{{ build.vcsa_iso }}"
+      fstype: iso9660
+      opts: ro
+      boot: false
+      state: mounted
+    become: true
+
+  - name: Create working directory
+    ansible.builtin.file:
+      path: "{{ build.temp_folder }}/vcsa"
+      state: directory
+      mode: "755"
+
+  - name: Create propety json file for ovf deploy
+    ansible.builtin.template:
+      src: embedded_vCSA_on_ESXi.json
+      dest: "{{ build.temp_folder }}/vcsa/property.json"
+      mode: "755"
+
+  - name: Deploy VCSA with cli installer
+    ansible.builtin.command: "bash ./vcsa-deploy install --accept-eula --no-ssl-certificate-verification -v {{ build.temp_folder }}/vcsa/property.json"
+    args:
+      chdir: "{{ build.mount_point }}/vcsa-cli-installer/lin64/"
+    async: 6000
+    poll: 0
+    register: vcsa_deploy_task
+
+  - name: Check result of deploying vcsa
+    ansible.builtin.async_status:
+      jid: "{{ vcsa_deploy_task.ansible_job_id }}"
+    retries: 600
+    delay: 10
+    register: task_result
+    until: task_result.finished
+
+  - name: Check VCSA management ui
+    ansible.builtin.uri:
+      url: "https://{{ common.vsphere.fqdn }}/ui"
+      timeout: 3
+      validate_certs: "{{ common.vsphere.validate_certs }}"
+      return_content: true
+    retries: 10
+    delay: 5
+    register: curl_result
+    until: curl_result.content.find("<title>vSphere Client</title>") != -1
+
+  - name: Unmount VCSA installer
+    ansible.posix.mount:
+      path: "{{ build.mount_point }}"
+      state: absent
+    become: true

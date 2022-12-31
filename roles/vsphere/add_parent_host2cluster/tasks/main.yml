@@ -1,0 +1,15 @@
+---
+# tasks file for roles/vsphere/add_parent_host2cluster
+- name: Add parent esxi hosts to vCenter
+  community.vmware.vmware_host:
+    hostname: "{{ common.vsphere.fqdn }}"
+    username: "{{ common.vsphere.user }}"
+    password: "{{ common.vsphere.password }}"
+    validate_certs: "{{ common.vsphere.validate_certs }}"
+    datacenter: "{{ common.vsphere.datacenter }}"
+    cluster: "{{ common.vsphere.cluster }}"
+    esxi_hostname: "{{ item.value.fqdn }}"
+    esxi_username: "{{ parent_esxi.common.username }}"
+    esxi_password: "{{ parent_esxi.common.password }}"
+    state: "present"
+  loop: "{{ parent_esxi.host | dict2items }}"

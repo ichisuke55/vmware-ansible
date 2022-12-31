@@ -1,0 +1,29 @@
+---
+# tasks file for vsphere/parent_cluster
+- name: Create nested vcsa datacenter
+  community.vmware.vmware_datacenter:
+    hostname: "{{ common.vsphere.fqdn }}"
+    username: "{{ common.vsphere.user }}"
+    password: "{{ common.vsphere.password }}"
+    validate_certs: "{{ common.vsphere.validate_certs }}"
+    datacenter_name: "{{ common.vsphere.datacenter }}"
+    state: present
+
+- name: Create parent cluster
+  community.vmware.vmware_cluster:
+    hostname: "{{ common.vsphere.fqdn }}"
+    username: "{{ common.vsphere.user }}"
+    password: "{{ common.vsphere.password }}"
+    validate_certs: "{{ common.vsphere.validate_certs }}"
+    datacenter_name: "{{ common.vsphere.datacenter }}"
+    cluster_name: "{{ common.vsphere.cluster }}"
+
+- name: Enable DRS at created cluster
+  community.vmware.vmware_cluster_drs:
+    hostname: "{{ common.vsphere.fqdn }}"
+    username: "{{ common.vsphere.user }}"
+    password: "{{ common.vsphere.password }}"
+    validate_certs: "{{ common.vsphere.validate_certs }}"
+    datacenter_name: "{{ common.vsphere.datacenter }}"
+    cluster_name: "{{ common.vsphere.cluster }}"
+    enable: true

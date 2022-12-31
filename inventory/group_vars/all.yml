@@ -6,10 +6,10 @@ build:
   iso_directory: "/mnt/nfs/iso/vmware"
   template_file: "esxi_kickstart.j2"
   esxi_installer: "ESXi-Installer-{{ esxi_version }}"
-  iso_file: "esxi/VMware-VMvisor-Installer-7.0U3f-20036589.x86_64.iso"
+  iso_file: "esxi/7.0U3g/VMware-VMvisor-Installer-7.0U3g-20328353.x86_64.iso"
   # below vcsa
   vcsa_ova: "vcsa/VMware-vCenter-Server-Appliance-7.0.3.00800-20150588_OVF10.ova"
-  vcsa_iso: "vcsa/VMware-VCSA-all-7.0.3-20395099.iso"
+  vcsa_iso: "vcsa/7.0.3u3j/VMware-VCSA-all-7.0.3-20990077.iso"
   nsx_ova: "nsxt/3.2.1.1/nsx-unified-appliance-3.2.1.1.0.20115694.ova"
   nsx_edge_ova: "nsxt/3.2.1.1/nsx-edge-3.2.1.1.0.20115700.ova"
 
@@ -263,19 +263,24 @@ nested_nsx:
 
 common:
   vsphere:
-    fqdn: "vcenter01.ichisuke.home"
+    fqdn: "vcsa01.ichisuke.home"
     user: "administrator@ichisuke.home"
     password: "VMware1!"
     validate_certs: false
     datacenter: "HomeLabDC"
     datastore: "datastore.nas02"
     datastore_path: "ISOs"
+    deploy_size: "tiny"
     dvs:
       name: "management"
-    cluster:
-      parent:
-        name: "HomeLabCluster"
+    cluster: "HomeLabCluster"
+    address:
+      ipv4: "192.168.3.210"
+      prefix: "24"
+      gateway: "192.168.3.1"
     port_group:
+      parent:
+        - name: "VM Network"
       nested:
         - name: "nested_mgmt"
           state: "present"
@@ -297,16 +302,16 @@ common:
   dns:
     domain: "ichisuke.home"
     primary:
-      ipv4: "192.168.3.214"
+      ipv4: "192.168.3.201"
     secondary:
-      ipv4: "192.168.3.215"
+      ipv4: "192.168.3.202"
   ntp:
     primary:
-      ipv4: "192.168.3.214"
+      ipv4: "192.168.3.201"
     secondary:
-      ipv4: "192.168.3.215"
+      ipv4: "192.168.3.202"
   syslog:
-    ipv4: "192.168.3.195"
+    ipv4: "192.168.3.204"
     protocol: "udp"
     port: "514"
   license:
@@ -331,3 +336,56 @@ common:
           36306330393065383262383339643839346236356134333965336266333735393939393433626638
           3137356335303838620a643361316230333166663939626463663638626639306430396662316161
           30383066323534353737373635613836613132313730633136366563396661396231
+
+parent_esxi:
+  host:
+    esxi01:
+      vm_name: "esxi01"
+      fqdn: "esxi01.ichisuke.home"
+      enable_ssh: true
+      vmnic: "vusb0"
+
+    esxi02:
+      vm_name: "esxi02"
+      fqdn: "esxi02.ichisuke.home"
+      enable_ssh: true
+      vmnic: "vusb0"
+
+    esxi03:
+      vm_name: "esxi03"
+      fqdn: "esxi03.ichisuke.home"
+      enable_ssh: true
+      vmnic: "vusb0"
+
+    esxi04:
+      vm_name: "esxi04"
+      fqdn: "esxi04.ichisuke.home"
+      enable_ssh: true
+      vmnic: "vmnic3"
+
+  common:
+    username: "root"
+    password: "VMware1!"
+    validate_certs: false
+    disk_provisioning: "thin"
+    datastore: "datastore.nas02"
+    folder: "/nested_vms/"
+    iscsi:
+      vmhba_name: "vmhba65"
+      target_address: "192.168.3.200"
+
+  network:
+    dvs:
+      mgmt:
+        name: "mgmt"
+        version: "7.0.3"
+        mtu: 4096
+        num_uplinks: 2
+        discovery_protocol: "lldp"
+        discovery_operation: "both"
+        port_group:
+          name: "pg_mgmt"
+          state: "present"
+          vlan_id: "0-4094"
+          num_ports: 8
+

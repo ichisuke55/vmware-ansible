@@ -1,0 +1,12 @@
+---
+- name: Construct vCenter Cluster
+  hosts: localhost
+  gather_facts: false
+
+  roles:
+    - vsphere/deploy_parent_vcsa_iso
+    - vsphere/parent_cluster
+    - vsphere/add_parent_host2cluster
+    - vsphere/add_parent_dvs
+    - vsphere/join_parent_host_dvs
+    - vsphere/enable_parent_license
