@@ -1,0 +1,19 @@
+{
+  "rrsets": [
+  {% for fqdn, ip in dns_list %}
+    {
+      "comments": [],
+      "name": "{{ fqdn }}.",
+      "records": [
+        {
+          "content": "{{ ip }}",
+          "disabled": false
+        }
+      ],
+      "ttl": 3600,
+      "type": "A",
+      "changetype": "REPLACE"
+    },
+  {% endfor %}
+  ]
+}

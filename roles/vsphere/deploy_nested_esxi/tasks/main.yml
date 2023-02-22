@@ -1,4 +1,14 @@
 ---
+- name: Create VM folder
+  community.vmware.vcenter_folder:
+    hostname: "{{ common.vsphere.fqdn }}"
+    username: "{{ common.vsphere.user }}"
+    password: "{{ common.vsphere.password }}"
+    validate_certs: "{{ common.vsphere.validate_certs }}"
+    datacenter_name: "{{ common.vsphere.datacenter }}"
+    folder_name: "{{ nested_esxi.common.folder | regex_replace('/', '')}}"
+    folder_type: "vm"
+
 # tasks file for deploy_nested_esxi
 - name: Check if nested ESXi deployed
   ansible.builtin.uri:
@@ -21,14 +31,15 @@
       username: "{{ common.vsphere.user }}"
       password: "{{ common.vsphere.password }}"
       validate_certs: "{{ common.vsphere.validate_certs }}"
-      name: "{{ item.value.vm_name }}"
+      name: "{{ item.value.fqdn }}"
       state: "present"
       guest_id: "{{ item.value.guest_id }}"
       # cluster: "{{ item.value.cluster }}"
       datacenter: "{{ common.vsphere.datacenter }}"
+      resource_pool: "{{ tenant_name }}"
       folder: "{{ nested_esxi.common.folder }}"
       disk:
-      - size_gb: "{{ nested_esxi.hardware_properties[item.value.cluster]['boot_size'] }}"
+      - size_gb: "{{ nested_esxi.hardware_properties.boot_size }}"
         type: "{{ nested_esxi.common.disk_provisioning }}"
         datastore: "{{ nested_esxi.common.datastore }}"
       - size_gb: "{{ item.value.datastore.cache.size }}"
@@ -43,8 +54,8 @@
         hotadd_memory: true
         nested_virt: true
         num_cpu_cores_per_socket: 1
-        memory_mb: "{{ nested_esxi.hardware_properties[item.value.cluster]['memory'] }}"
-        num_cpus: "{{ nested_esxi.hardware_properties[item.value.cluster]['cpu'] }}"
+        memory_mb: "{{ nested_esxi.hardware_properties.memory }}"
+        num_cpus: "{{ nested_esxi.hardware_properties.cpu }}"
       networks:
       - name: "{{ common.vsphere.port_group.nested[0].name }}"
         device_type: "{{ common.vsphere.port_group.nested[0].type }}"
@@ -79,7 +90,7 @@
       password: "{{ common.vsphere.password }}"
       validate_certs: "{{ common.vsphere.validate_certs }}"
       datacenter: "{{ common.vsphere.datacenter }}"
-      name: "{{ item.value.vm_name }}"
+      name: "{{ item.value.fqdn }}"
       state: "powered-on"
     register: result
     loop: "{{ nested_esxi.host | dict2items }}"

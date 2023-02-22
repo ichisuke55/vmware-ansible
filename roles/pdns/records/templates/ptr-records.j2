@@ -1,0 +1,19 @@
+{
+  "rrsets": [
+  {% for fqdn, ip in dns_list %}
+    {
+      "comments": [],
+      "name": "{{ ip | string | ansible.utils.ipaddr('revdns') }}",
+      "records": [
+        {
+          "content": "{{ fqdn }}.",
+          "disabled": false
+        }
+      ],
+      "ttl": 3600,
+      "type": "PTR",
+      "changetype": "REPLACE"
+    },
+  {% endfor %}
+  ]
+}

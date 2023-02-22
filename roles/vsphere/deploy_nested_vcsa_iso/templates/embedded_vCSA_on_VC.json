@@ -28,7 +28,7 @@
             ],
             "thin_disk_mode": true,
             "deployment_option": "{{ nested_vcsa.deploy_size}}",
-            "name": "{{ nested_vcsa.name }}"
+            "name": "{{ nested_vcsa.fqdn }}"
         },
         "network": {
             "ip_family": "ipv4",

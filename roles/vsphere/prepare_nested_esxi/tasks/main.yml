@@ -12,6 +12,7 @@
     vlan_id: "{{ item.vlan_id }}"
     vlan_trunk: true
     network_policy:
+      inherited: true
       forged_transmits: true
       promiscuous: true
     num_ports: "{{ item.num_ports }}"

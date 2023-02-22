@@ -19,6 +19,7 @@
     validate_certs: "{{ common.vsphere.validate_certs }}"
     name: "{{ item.value.name }}"
     datacenter: "{{ common.vsphere.datacenter }}"
+    resource_pool: "{{ tenant_name }}"
     datastore: "{{ nested_nsx.datastore }}"
     disk_provisioning: "{{ nested_nsx.disk_provi }}"
     deployment_option: "{{ item.value.deploy_size }}"
@@ -26,6 +27,7 @@
     wait: true
     power_on: false
     allow_duplicates: false
+    fail_on_spec_warnings: true
     networks:
       "Network 0": "{{ common.vsphere.port_group.nested[0].name }}"
       "Network 1": "{{ common.vsphere.port_group.nested[2].name }}"
@@ -39,7 +41,7 @@
       nsx_allowSSHRootLogin: "{{ nested_nsx.property.allow_ssh_root_login }}"
       nsx_isSSHEnabled: "{{ nested_nsx.property.ssh_enable }}"
       nsx_ip_0: "{{ item.value.address }}"
-      nsx_netmask_0: "{{ item.value.netmask }}"
+      nsx_netmask_0: "{{ item.value.prefix }}"
       nsx_dns1_0: "{{ common.dns.primary.ipv4 }}"
       nsx_domain_0: "{{ common.dns.domain }}"
       nsx_gateway_0: "{{ nested_nsx.address.gateway }}"

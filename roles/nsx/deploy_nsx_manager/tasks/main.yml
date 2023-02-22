@@ -20,6 +20,7 @@
       validate_certs: "{{ common.vsphere.validate_certs }}"
       name: "{{ nested_nsx.name }}"
       datacenter: "{{ common.vsphere.datacenter }}"
+      resource_pool: "{{ tenant_name }}"
       datastore: "{{ nested_nsx.datastore }}"
       disk_provisioning: "{{ nested_nsx.disk_provi }}"
       deployment_option: "{{ nested_nsx.deploy_size }}"
@@ -40,12 +41,12 @@
         nsx_gateway_0: "{{ nested_nsx.address.gateway }}"
         nsx_hostname: "{{ nested_nsx.fqdn }}"
         nsx_ip_0: "{{ nested_nsx.address.ipv4 }}"
-        nsx_netmask_0: "{{ nested_nsx.address.netmask }}"
+        nsx_netmask_0: "{{ nested_nsx.address.prefix }}"
         nsx_ntp_0: "{{ common.ntp.primary.ipv4 }}"
         nsx_passwd_0: "{{ nested_nsx.property.admin_password }}"
         nsx_role: "{{ nested_nsx.property.nsx_role }}"
     async: 2400
-    poll: 0
+    poll: 10
     register: nsx_deploy_result
 
   - name: Check if NSX-T Manager deployed

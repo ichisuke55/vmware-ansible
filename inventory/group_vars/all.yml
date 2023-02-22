@@ -1,4 +1,10 @@
 ---
+tenant_name: "tenant1"
+domain_suffix: "ichisuke.home"
+tenant_domain_suffix: "{{ tenant_name }}.{{ domain_suffix }}"
+mgmt_address: "192.168.8.0"
+rev_tenant_domain_suffix: '{{ mgmt_address | ansible.utils.ipv4("network") | ansible.utils.ipaddr("revdns") | regex_replace("^([^\.]+\.){1}", "") }}'
+
 esxi_version: "7.x" # 6.x|7.x
 build:
   temp_folder: "/tmp/isos"
@@ -9,25 +15,25 @@ build:
   iso_file: "esxi/7.0U3g/VMware-VMvisor-Installer-7.0U3g-20328353.x86_64.iso"
   # below vcsa
   vcsa_ova: "vcsa/VMware-vCenter-Server-Appliance-7.0.3.00800-20150588_OVF10.ova"
-  vcsa_iso: "vcsa/7.0.3u3j/VMware-VCSA-all-7.0.3-20990077.iso"
-  nsx_ova: "nsxt/3.2.1.1/nsx-unified-appliance-3.2.1.1.0.20115694.ova"
-  nsx_edge_ova: "nsxt/3.2.1.1/nsx-edge-3.2.1.1.0.20115700.ova"
+  vcsa_iso: "vcsa/7.0.3u3g/VMware-VCSA-all-7.0.3-20150588.iso"
+  nsx_ova: "nsxt/4.0.1.1/nsx-unified-appliance-4.0.1.1.0.20598732.ova"
+  nsx_edge_ova: "nsxt/4.0.1.1/nsx-edge-4.0.1.1.0.20598735.ova"
 
 nested_esxi:
   host:
     esxi11:
-      cluster: "nested_cluster_a"
+      cluster: "{{ tenant_name }}_cluster"
       vm_name: "esxi11"
-      fqdn: "esxi11.ichisuke.home"
+      fqdn: "esxi11.{{ tenant_domain_suffix }}"
       guest_id: "vmkernel7Guest" # Enum: GuestOsIdentifier ref: https://developer.vmware.com/apis/1311/vsphere
       vmk:
         vmk0:
           vlan: "0"
           address:
             ipv4:
-              address: "192.168.3.221"
+              address: "{{ mgmt_address | ansible.utils.ipmath(11) }}"
               prefix: "24"
-              gateway: "192.168.3.1"
+              gateway: "{{ mgmt_address | ansible.utils.ipmath(254) }}"
       enable_ssh: true
       datastore:
         cache:
@@ -38,18 +44,18 @@ nested_esxi:
           size: 80
 
     esxi12:
-      cluster: "nested_cluster_a"
+      cluster: "{{ tenant_name }}_cluster"
       vm_name: "esxi12"
-      fqdn: "esxi12.ichisuke.home"
+      fqdn: "esxi12.{{ tenant_domain_suffix }}"
       guest_id: "vmkernel7Guest" # Enum: GuestOsIdentifier ref: https://developer.vmware.com/apis/1311/vsphere
       vmk:
         vmk0:
           vlan: "0"
           address:
             ipv4:
-              address: "192.168.3.222"
+              address: "{{ mgmt_address | ansible.utils.ipmath(12) }}"
               prefix: "24"
-              gateway: "192.168.3.1"
+              gateway: "{{ mgmt_address | ansible.utils.ipmath(254) }}"
       enable_ssh: true
       datastore:
         cache:
@@ -60,18 +66,18 @@ nested_esxi:
           size: 80
 
     esxi13:
-      cluster: "nested_cluster_a"
+      cluster: "{{ tenant_name }}_cluster"
       vm_name: "esxi13"
-      fqdn: "esxi13.ichisuke.home"
+      fqdn: "esxi13.{{ tenant_domain_suffix }}"
       guest_id: "vmkernel7Guest" # Enum: GuestOsIdentifier ref: https://developer.vmware.com/apis/1311/vsphere
       vmk:
         vmk0:
           vlan: "0"
           address:
             ipv4:
-              address: "192.168.3.223"
+              address: "{{ mgmt_address | ansible.utils.ipmath(13) }}"
               prefix: "24"
-              gateway: "192.168.3.1"
+              gateway: "{{ mgmt_address | ansible.utils.ipmath(254) }}"
       enable_ssh: true
       datastore:
         cache:
@@ -82,13 +88,12 @@ nested_esxi:
           size: 80
 
   hardware_properties:
-    nested_cluster_a:
-      cpu: 2
-      memory: 16384
-      boot_size: 32
-      vsan:
-        cache_size: 20
-        capacity_size: 80
+    cpu: 2
+    memory: 16384
+    boot_size: 32
+    vsan:
+      cache_size: 20
+      capacity_size: 80
 
   common:
     username: "root"
@@ -105,14 +110,14 @@ nested_esxi:
   network:
     dvs:
       mgmt:
-        name: "nested_mgmt"
+        name: "mgmt"
         version: "7.0.3"
         mtu: 9000
         num_uplinks: 2
         discovery_protocol: "lldp"
         discovery_operation: "both"
         port_group:
-          name: "pg_nested_mgmt"
+          name: "pg_mgmt"
           state: "present"
           vlan_id: "0-4094"
           num_ports: 8
@@ -120,14 +125,14 @@ nested_esxi:
           # - "vmnic0"
           - "vmnic1"
       storage:
-        name: "nested_storage"
+        name: "storage"
         version: "7.0.3"
         mtu: 9000
         num_uplinks: 2
         discovery_protocol: "lldp"
         discovery_operation: "both"
         port_group:
-          name: "pg_nested_storage"
+          name: "pg_storage"
           state: "present"
           vlan_id: "0-4094"
           num_ports: 8
@@ -153,20 +158,20 @@ nested_esxi:
 nested_vcsa:
   name: "nested_vcsa"
   datastore: "datastore.nas02"
-  datacenter: "nested_dc"
-  cluster: "nested_cluster_a"
+  datacenter: "{{ tenant_name }}_dc"
+  cluster: "{{ tenant_name }}_cluster"
   disk_provi: "thin"
   deploy_size: "tiny"
   folder: "/nested_vms/"
-  fqdn: "nested-vcsa.ichisuke.home"
+  fqdn: "vcsa11.{{ tenant_domain_suffix }}"
   address:
-    ipv4: "192.168.3.220"
+    ipv4: "{{ mgmt_address | ansible.utils.ipmath(10) }}"
     prefix: "24"
-    gateway: "192.168.3.1"
+    gateway: "{{ mgmt_address | ansible.utils.ipmath(254) }}"
 
 nested_nsx:
-  name: "nsx-mgr01"
-  fqdn: "nsx-mgr01.ichisuke.home"
+  name: "mgr11.{{ tenant_domain_suffix }}"
+  fqdn: "mgr11.{{ tenant_domain_suffix }}"
   validate_certs: false
   disk_provi: "thin"
   deploy_size: "small"
@@ -181,46 +186,46 @@ nested_nsx:
     ssh_enable: true
     nsx_role: "NSX Manager"
   address:
-    ipv4: "192.168.3.224"
-    netmask: "24"
-    gateway: "192.168.3.1"
+    ipv4: "{{ mgmt_address | ansible.utils.ipmath(31) }}"
+    prefix: "24"
+    gateway: "{{ mgmt_address | ansible.utils.ipmath(254) }}"
   pool:
     host_tep:
       name: "tep-pool"
-      range_start: "192.168.101.2"
-      range_end: "192.168.101.10"
-      cidr: "192.168.101.0/24"
-      gw_ip: "192.168.101.1"
+      range_start: "192.168.9.2"
+      range_end: "192.168.9.10"
+      cidr: "192.168.9.0/24"
+      gw_ip: "192.168.9.1"
     edge_tep:
       name: "edge-pool"
-      range_start: "192.168.102.2"
-      range_end: "192.168.102.10"
-      cidr: "192.168.102.0/24"
-      gw_ip: "192.168.102.1"
+      range_start: "192.168.9.11"
+      range_end: "192.168.9.20"
+      cidr: "192.168.9.0/24"
+      gw_ip: "192.168.9.1"
   edge_cluster:
     name: "edge-cluster-1"
   edges:
     edge01:
-      name: "nsx-edge01"
-      fqdn: "nsx-edge01.ichisuke.home"
+      name: "edge11.{{ tenant_domain_suffix }}"
+      fqdn: "edge11.{{ tenant_domain_suffix }}"
       deploy_size: "medium"
-      address: "192.168.3.227"
-      netmask: "24"
+      address: "{{ mgmt_address | ansible.utils.ipmath(41) }}"
+      prefix: "24"
     edge02:
-      name: "nsx-edge02"
-      fqdn: "nsx-edge02.ichisuke.home"
+      name: "edge12.{{ tenant_domain_suffix }}"
+      fqdn: "edge12.{{ tenant_domain_suffix }}"
       deploy_size: "medium"
-      address: "192.168.3.228"
-      netmask: "24"
+      address: "{{ mgmt_address | ansible.utils.ipmath(42) }}"
+      prefix: "24"
   uplink_profile:
     host:
       name: "host-uplink-profile"
       policy: "FAILOVER_ORDER"
-      transport_vlan: 101
+      transport_vlan: 9
     edge:
       name: "edge-uplink-profile"
       policy: "FAILOVER_ORDER"
-      transport_vlan: 102
+      transport_vlan: 9
   transport_zone:
     overlay:
       name: "overlay-tz"
@@ -241,30 +246,30 @@ nested_nsx:
     interfaces:
       active:
         name: "t0-active-intf"
-        ipv4: "192.168.103.11"
-        netmask: "24"
+        ipv4: "192.168.10.1"
+        prefix: "24"
       standby:
         name: "t0-standby-intf"
-        ipv4: "192.168.103.12"
-        netmask: "24"
+        ipv4: "192.168.10.2"
+        prefix: "24"
     bgp:
       name: "t0-bgp"
       asn: "65001"
       remote_asn: "65000"
-      neighbor: "192.168.103.1"
+      neighbor: "192.168.10.254"
     route_redistribute_type:
       - "TIER1_CONNECTED"
   segment:
     external:
       name: "external"
-      vlan: 103
+      vlan: 10
     overlay:
       name: "t1-gw-segment"
 
 common:
   vsphere:
-    fqdn: "vcsa01.ichisuke.home"
-    user: "administrator@ichisuke.home"
+    fqdn: "vcsa01.{{ domain_suffix }}"
+    user: "administrator@{{ domain_suffix }}"
     password: "VMware1!"
     validate_certs: false
     datacenter: "HomeLabDC"
@@ -272,7 +277,7 @@ common:
     datastore_path: "ISOs"
     deploy_size: "tiny"
     dvs:
-      name: "management"
+      name: "mgmt"
     cluster: "HomeLabCluster"
     address:
       ipv4: "192.168.3.210"
@@ -282,17 +287,17 @@ common:
       parent:
         - name: "VM Network"
       nested:
-        - name: "nested_mgmt"
+        - name: "{{ tenant_name }}_mgmt"
           state: "present"
           vlan_id: "0-4094"
           num_ports: 16
           type: "vmxnet3"
-        - name: "nested_storage"
+        - name: "{{ tenant_name }}_storage"
           state: "present"
           vlan_id: "0-4094"
           num_ports: 8
           type: "vmxnet3"
-        - name: "nsx"
+        - name: "{{ tenant_name}}_nsx"
           state: "present"
           vlan_id: "0-4094"
           num_ports: 16
@@ -300,11 +305,17 @@ common:
   esxi:
     password: "VMware1!"
   dns:
-    domain: "ichisuke.home"
+    domain: "{{ domain_suffix }}"
     primary:
       ipv4: "192.168.3.201"
     secondary:
       ipv4: "192.168.3.202"
+    zone:
+      mgmt:
+        name: "{{ tenant_domain_suffix }}"
+      rev_mgmt:
+        name: "{{ rev_tenant_domain_suffix }}"
+    api_key: "VMware1!"
   ntp:
     primary:
       ipv4: "192.168.3.201"
@@ -341,25 +352,25 @@ parent_esxi:
   host:
     esxi01:
       vm_name: "esxi01"
-      fqdn: "esxi01.ichisuke.home"
+      fqdn: "esxi01.{{ domain_suffix }}"
       enable_ssh: true
       vmnic: "vusb0"
 
     esxi02:
       vm_name: "esxi02"
-      fqdn: "esxi02.ichisuke.home"
+      fqdn: "esxi02.{{ domain_suffix }}"
       enable_ssh: true
       vmnic: "vusb0"
 
     esxi03:
       vm_name: "esxi03"
-      fqdn: "esxi03.ichisuke.home"
+      fqdn: "esxi03.{{ domain_suffix }}"
       enable_ssh: true
       vmnic: "vusb0"
 
     esxi04:
       vm_name: "esxi04"
-      fqdn: "esxi04.ichisuke.home"
+      fqdn: "esxi04.{{ domain_suffix }}"
       enable_ssh: true
       vmnic: "vmnic3"
 
@@ -388,4 +399,3 @@ parent_esxi:
           state: "present"
           vlan_id: "0-4094"
           num_ports: 8
-

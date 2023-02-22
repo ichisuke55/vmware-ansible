@@ -1,1 +1,5 @@
-localhost
+all:
+  hosts:
+    localhost:
+      ansible_connection: local
+      ansible_host: localhost

@@ -28,7 +28,7 @@
       guestinfo.cis.appliance.root.passwd: "{{ common.vsphere.password }}"
       # TODO: fix properties
       guestinfo.cis.appliance.ssh.enabled: true
-      guestinfo.cis.appliance.ntp.servers: "{{ common.ntp.primary.ipv4 }},{{common.ntp.secondary.ipv4}}"
+      guestinfo.cis.appliance.ntp.servers: "{{ common.ntp.primary.ipv4 }}"
       guestinfo.cis.ceip_enabled: true
       guestinfo.cis.deployment.autoconfig: "True"
       guestinfo.cis.vmdir.domain-name: "{{ common.vsphere.user.split('@')[1] }}"

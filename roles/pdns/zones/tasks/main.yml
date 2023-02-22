@@ -1,0 +1,35 @@
+---
+# tasks file for roles/pdns/zones
+- name: Create tenant management domain zone
+  ansible.builtin.uri:
+    url: "http://{{ common.dns.primary.ipv4 }}:8081/api/v1/servers/localhost/zones"
+    method: POST
+    status_code:
+      - 201
+      - 409
+    headers:
+      Content-Type: application/json
+      X-API-Key: "{{ common.dns.api_key }}"
+    body_format: json
+    body: "{{ lookup('template', 'a-zone.j2') }}"
+  register: post_result
+  until: post_result is not failed
+  retries: 30
+  delay: 3
+
+- name: Create tenant management domain rev zone
+  ansible.builtin.uri:
+    url: "http://{{ common.dns.primary.ipv4 }}:8081/api/v1/servers/localhost/zones"
+    method: POST
+    status_code:
+      - 201
+      - 409
+    headers:
+      Content-Type: application/json
+      X-API-Key: "{{ common.dns.api_key }}"
+    body_format: json
+    body: "{{ lookup('template', 'rev-zone.j2') }}"
+  register: post_result
+  until: post_result is not failed
+  retries: 30
+  delay: 3

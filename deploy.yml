@@ -4,6 +4,9 @@
   gather_facts: false
 
   roles:
+    - pdns/zones
+    - pdns/records
+    - vsphere/resource_pool
     - vsphere/prepare_nested_esxi
     - vsphere/deploy_nested_esxi
     # - vsphere/deploy_nested_vcsa # TODO: fix future

@@ -1,0 +1,29 @@
+{
+  "dnssec": false,
+  "kind": "Native",
+  "name": "{{ rev_tenant_domain_suffix }}",
+  "rrsets": [
+    {
+      "name": "{{ rev_tenant_domain_suffix }}",
+      "records": [
+        {
+          "content": "ns01.{{ rev_tenant_domain_suffix }} root.{{ tenant_domain_suffix }}. {{ lookup('pipe','date +%Y%m%d%H') }} 10800 3600 604800 3600",
+          "disabled": false
+        }
+      ],
+      "ttl": 3600,
+      "type": "SOA"
+    },
+    {
+      "name": "{{ rev_tenant_domain_suffix }}",
+      "records": [
+        {
+          "content": "ns01.{{ tenant_domain_suffix }}.",
+          "disabled": false
+        }
+      ],
+      "ttl": 3600,
+      "type": "NS"
+    }
+  ]
+}

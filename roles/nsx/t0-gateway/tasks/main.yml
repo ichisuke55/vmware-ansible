@@ -32,7 +32,7 @@
             state: "present"
             subnets:
               - ip_addresses: ["{{ nested_nsx.t0_gateway.interfaces.active.ipv4 }}"]
-                prefix_len: "{{ nested_nsx.t0_gateway.interfaces.active.netmask }}"
+                prefix_len: "{{ nested_nsx.t0_gateway.interfaces.active.prefix }}"
             segment_display_name: "{{ nested_nsx.segment.external.name }}"
             edge_node_info:
               edge_cluster_display_name: "{{ nested_nsx.edge_cluster.name }}"
@@ -41,7 +41,7 @@
             state: "present"
             subnets:
               - ip_addresses: ["{{ nested_nsx.t0_gateway.interfaces.standby.ipv4 }}"]
-                prefix_len: "{{ nested_nsx.t0_gateway.interfaces.standby.netmask }}"
+                prefix_len: "{{ nested_nsx.t0_gateway.interfaces.standby.prefix }}"
             segment_display_name: "{{ nested_nsx.segment.external.name }}"
             edge_node_info:
               edge_cluster_display_name: "{{ nested_nsx.edge_cluster.name }}"

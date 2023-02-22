@@ -64,3 +64,5 @@
     return_content: true
   register: result
   until: result.json.up_count > 0
+  retries: 120
+  delay: 10

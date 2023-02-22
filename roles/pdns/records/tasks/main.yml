@@ -1,0 +1,55 @@
+---
+# tasks file for roles/pdns
+- name: Define A record list
+  ansible.builtin.set_fact:
+    dns_list: []
+
+- name: Append vCenter DNS record to dns_list
+  ansible.builtin.set_fact:
+    dns_list: '{{ dns_list + [[nested_vcsa.fqdn, nested_vcsa.address.ipv4]] }}'
+
+- name: Append ESXi DNS record to dns_list
+  ansible.builtin.set_fact:
+    dns_list: '{{ dns_list + [[item.value.fqdn, item.value.vmk.vmk0.address.ipv4.address]] }}'
+  loop: '{{ nested_esxi.host | dict2items }}'
+
+- name: Append NSX-T Manager DNS record to dns_list
+  ansible.builtin.set_fact:
+    dns_list: '{{ dns_list + [[nested_nsx.fqdn, nested_nsx.address.ipv4]] }}'
+
+- name: Append NSX-T Edge DNS record to dns_list
+  ansible.builtin.set_fact:
+    dns_list: '{{ dns_list + [[item.value.fqdn, item.value.address]] }}'
+  loop: '{{ nested_nsx.edges | dict2items }}'
+
+- name: Create A records
+  ansible.builtin.uri:
+    url: "http://{{ common.dns.primary.ipv4 }}:8081/api/v1/servers/localhost/zones/{{ common.dns.zone.mgmt.name }}"
+    method: PATCH
+    status_code:
+      - 204
+    headers:
+      Content-Type: application/json
+      X-API-Key: "{{ common.dns.api_key }}"
+    body_format: json
+    body: "{{ lookup('template', 'a-records.j2') }}"
+  register: post_result
+  until: post_result is not failed
+  retries: 60
+  delay: 10
+
+- name: Create PTR records
+  ansible.builtin.uri:
+    url: "http://{{ common.dns.primary.ipv4 }}:8081/api/v1/servers/localhost/zones/{{ common.dns.zone.rev_mgmt.name }}"
+    method: PATCH
+    status_code:
+      - 204
+    headers:
+      Content-Type: application/json
+      X-API-Key: "{{ common.dns.api_key }}"
+    body_format: json
+    body: "{{ lookup('template', 'ptr-records.j2') }}"
+  register: post_result
+  until: post_result is not failed
+  retries: 60
+  delay: 10

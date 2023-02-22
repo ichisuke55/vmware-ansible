@@ -1,0 +1,20 @@
+---
+# tasks file for roles/vsphere/resource_pool
+- name: Add resource pool to vCenter
+  community.vmware.vmware_resource_pool:
+    hostname: '{{ common.vsphere.fqdn }}'
+    username: '{{ common.vsphere.user }}'
+    password: '{{ common.vsphere.password }}'
+    datacenter: '{{ common.vsphere.datacenter }}'
+    cluster: "{{ common.vsphere.cluster }}"
+    validate_certs: false
+    resource_pool: '{{ tenant_name }}'
+    mem_shares: normal
+    mem_limit: -1
+    mem_reservation: 0
+    mem_expandable_reservations: true
+    cpu_shares: normal
+    cpu_limit: -1
+    cpu_reservation: 0
+    cpu_expandable_reservations: true
+    state: present
